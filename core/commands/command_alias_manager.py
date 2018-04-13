@@ -11,7 +11,7 @@ class CommandAliasManager:
 
     def inject(self, registry):
         self.db = registry.get_instance("db")
-        self.command_manager: CommandManager = registry.get_instance("command_manager")
+        self.command_manager = registry.get_instance("command_manager")
 
     def start(self):
         self.db.load_sql_file("command_alias.sql", os.path.dirname(__file__))
