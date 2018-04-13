@@ -14,16 +14,16 @@ class Logger:
         self.logger.setLevel("DEBUG")
         self.logger.addHandler(Logger.console_logger)
 
-    def warning(self, msg, obj: Exception=None):
+    def warning(self, msg, obj=None):
         self.logger.warning(self.format_message(msg, obj))
 
-    def info(self, msg, obj: Exception=None):
+    def info(self, msg, obj=None):
         self.logger.info(self.format_message(msg, obj))
 
-    def error(self, msg, obj: Exception=None):
+    def error(self, msg, obj=None):
         self.logger.error(self.format_message(msg, obj))
 
-    def debug(self, msg, obj: Exception=None):
+    def debug(self, msg, obj=None):
         self.logger.debug(self.format_message(msg, obj))
 
     def log_chat(self, channel, sender, msg):

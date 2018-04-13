@@ -10,8 +10,8 @@ class PlayfieldController:
         pass
 
     def inject(self, registry):
-        self.db: DB = registry.get_instance("db")
-        self.text: Text = registry.get_instance("text")
+        self.db = registry.get_instance("db")
+        self.text = registry.get_instance("text")
 
     def start(self):
         self.db.load_sql_file("playfields.sql", os.path.dirname(__file__))

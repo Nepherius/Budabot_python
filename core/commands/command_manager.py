@@ -25,10 +25,10 @@ class CommandManager:
     def inject(self, registry):
         self.db = registry.get_instance("db")
         self.util = registry.get_instance("util")
-        self.access_manager: AccessManager = registry.get_instance("access_manager")
-        self.bot: Budabot = registry.get_instance("budabot")
-        self.character_manager: CharacterManager = registry.get_instance("character_manager")
-        self.setting_manager: SettingManager = registry.get_instance("setting_manager")
+        self.access_manager = registry.get_instance("access_manager")
+        self.bot = registry.get_instance("budabot")
+        self.character_manager = registry.get_instance("character_manager")
+        self.setting_manager = registry.get_instance("setting_manager")
         self.command_alias_manager = registry.get_instance("command_alias_manager")
 
     def start(self):
@@ -116,7 +116,7 @@ class CommandManager:
     def is_command_channel(self, channel):
         return channel in self.channels
 
-    def process_command(self, message: str, channel: str, char_id, reply):
+    def process_command(self, message, channel, char_id, reply):
         try:
             command_str, command_args = self.get_command_parts(message)
 
@@ -235,7 +235,7 @@ class CommandManager:
     def get_handlers(self, command_key):
         return self.handlers.get(command_key, None)
 
-    def handle_private_message(self, packet: server_packets.PrivateMessage):
+    def handle_private_message(self, packet):
         # since the command symbol is not required for private messages,
         # the command_str must have length of at least 1 in order to be valid,
         # otherwise it is ignored
@@ -253,7 +253,7 @@ class CommandManager:
             packet.character_id,
             lambda msg: self.bot.send_private_message(packet.character_id, msg))
 
-    def handle_private_channel_message(self, packet: server_packets.PrivateChannelMessage):
+    def handle_private_channel_message(self, packet):
         # since the command symbol is required in the private channel,
         # the command_str must have length of at least 2 in order to be valid,
         # otherwise it is ignored

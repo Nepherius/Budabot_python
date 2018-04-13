@@ -14,7 +14,7 @@ class BuddyManager:
         self.buddy_list_size = 1000
 
     def inject(self, registry):
-        self.character_manager: CharacterManager = registry.get_instance("character_manager")
+        self.character_manager = registry.get_instance("character_manager")
         self.bot = registry.get_instance("budabot")
         self.event_manager = registry.get_instance("event_manager")
 

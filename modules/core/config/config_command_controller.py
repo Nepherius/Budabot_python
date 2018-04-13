@@ -11,8 +11,8 @@ class ConfigCommandController:
         pass
 
     def inject(self, registry):
-        self.db: DB = registry.get_instance("db")
-        self.text: Text = registry.get_instance("text")
+        self.db = registry.get_instance("db")
+        self.text = registry.get_instance("text")
         self.access_manager = registry.get_instance("access_manager")
         self.command_manager = registry.get_instance("command_manager")
 

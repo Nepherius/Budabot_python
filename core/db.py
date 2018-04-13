@@ -12,7 +12,7 @@ class DB:
         self.enhanced_like_regex = re.compile("(\s+)(\S+)\s+<ENHANCED_LIKE>\s+\?(\s*)", re.IGNORECASE)
         self.lastrowid = None
 
-    def row_factory(self, cursor: sqlite3.Cursor, row):
+    def row_factory(self, cursor, row):
         d = {}
         for idx, col in enumerate(cursor.description):
             d[col[0]] = row[idx]

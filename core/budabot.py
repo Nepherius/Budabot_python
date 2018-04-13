@@ -1,10 +1,4 @@
 from core.aochat.bot import Bot
-from core.buddy_manager import BuddyManager
-from core.character_manager import CharacterManager
-from core.public_channel_manager import PublicChannelManager
-from core.settings.setting_manager import SettingManager
-from core.access_manager import AccessManager
-from core.text import Text
 from core.decorators import instance
 from core.chat_blob import ChatBlob
 from core.settings.setting_types import TextSettingType, ColorSettingType, NumberSettingType
@@ -21,16 +15,16 @@ class Budabot(Bot):
         self.org_id = None
         self.org_name = None
         self.superadmin = None
-        self.status: BotStatus = BotStatus.SHUTDOWN
+        self.status = BotStatus.SHUTDOWN
         self.dimension = None
 
     def inject(self, registry):
-        self.buddy_manager: BuddyManager = registry.get_instance("buddy_manager")
-        self.character_manager: CharacterManager = registry.get_instance("character_manager")
-        self.public_channel_manager: PublicChannelManager = registry.get_instance("public_channel_manager")
-        self.text: Text = registry.get_instance("text")
-        self.setting_manager: SettingManager = registry.get_instance("setting_manager")
-        self.access_manager: AccessManager = registry.get_instance("access_manager")
+        self.buddy_manager = registry.get_instance("buddy_manager")
+        self.character_manager = registry.get_instance("character_manager")
+        self.public_channel_manager = registry.get_instance("public_channel_manager")
+        self.text = registry.get_instance("text")
+        self.setting_manager = registry.get_instance("setting_manager")
+        self.access_manager = registry.get_instance("access_manager")
         self.command_manager = registry.get_instance("command_manager")
         self.event_manager = registry.get_instance("event_manager")
 
@@ -133,10 +127,10 @@ class Budabot(Bot):
                 packet = client_packets.PrivateChannelMessage(private_channel_id, page, "\0")
                 self.send_packet(packet)
 
-    def handle_private_message(self, packet: server_packets.PrivateMessage):
+    def handle_private_message(self, packet):
         self.logger.log_tell("From", self.character_manager.get_char_name(packet.character_id), packet.message)
 
-    def handle_public_channel_message(self, packet: server_packets.PublicChannelMessage):
+    def handle_public_channel_message(self, packet):
         self.logger.log_chat(
             self.public_channel_manager.get_channel_name(packet.channel_id),
             self.character_manager.get_char_name(packet.character_id),

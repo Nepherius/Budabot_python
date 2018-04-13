@@ -10,8 +10,8 @@ class CharacterHistoryController:
         pass
 
     def inject(self, registry):
-        self.db: DB = registry.get_instance("db")
-        self.text: Text = registry.get_instance("text")
+        self.db = registry.get_instance("db")
+        self.text = registry.get_instance("text")
         self.pork_manager = registry.get_instance("pork_manager")
 
     @command(command="whois", params=[Any("character")], access_level="all",

@@ -32,7 +32,7 @@ class SettingManager:
 
         self.db.exec("DELETE FROM event_config WHERE verified = 0")
 
-    def register(self, name, value, description, setting: SettingType, module):
+    def register(self, name, value, description, setting, module):
         name = name.lower()
         module = module.lower()
         setting.set_name(name)
