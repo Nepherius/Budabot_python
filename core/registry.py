@@ -1,7 +1,7 @@
 import re
 import os
 import importlib
-from core.logger import Logger
+from tools.logger import Logger
 from __init__ import flatmap
 
 

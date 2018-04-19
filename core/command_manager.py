@@ -1,13 +1,13 @@
 from core.decorators import instance
-from core.access_manager import AccessManager
+
 from core.aochat import server_packets
 from core.character_manager import CharacterManager
-from core.setting_manager import SettingManager
+
 from core.registry import Registry
-from core.logger import Logger
-from core.budabot import Budabot
-from core.chat_blob import ChatBlob
-from core.map_object import MapObject
+from tools.logger import Logger
+from core.mangopie import Mangopie
+from tools.chat_blob import ChatBlob
+from tools.map_object import MapObject
 from __init__ import flatmap, get_attrs
 import collections
 import re
@@ -23,11 +23,11 @@ class CommandManager:
     def inject(self, registry):
         self.db = registry.get_instance("db")
         self.util = registry.get_instance("util")
-        self.access_manager: AccessManager = registry.get_instance("access_manager")
-        self.bot: Budabot = registry.get_instance("budabot")
-        self.character_manager: CharacterManager = registry.get_instance("character_manager")
-        self.setting_manager: SettingManager = registry.get_instance("setting_manager")
-        self.command_alias_manager = registry.get_instance("command_alias_manager")
+
+        self.bot: Budabot = registry.get_instance("mangopie")
+        # self.character_manager: CharacterManager = registry.get_instance("character_manager")
+        # self.setting_manager: SettingManager = registry.get_instance("setting_manager")
+        # self.command_alias_manager = registry.get_instance("command_alias_manager")
 
     def pre_start(self):
         self.bot.add_packet_handler(server_packets.PrivateMessage.id, self.handle_private_message)

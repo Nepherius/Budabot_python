@@ -3,7 +3,7 @@ import struct
 import select
 from core.aochat.server_packets import ServerPacket, LoginOK
 from core.aochat.client_packets import LoginRequest, LoginSelect
-from core.logger import Logger
+from tools.logger import Logger
 from core.aochat.crypt import generate_login_key
 
 
@@ -12,7 +12,7 @@ class Bot:
         self.socket = None
         self.char_id = None
         self.char_name = None
-        self.logger = Logger("Budabot")
+        self.logger = Logger("Mangopie")
 
     def connect(self, host, port):
         self.logger.info("Connecting to %s:%d" % (host, port))

@@ -10,7 +10,7 @@ class CharacterManager:
         self.id_to_name = {}
 
     def inject(self, registry):
-        self.bot = registry.get_instance("budabot")
+        self.bot = registry.get_instance("mangopie")
 
     def pre_start(self):
         self.bot.add_packet_handler(server_packets.CharacterLookup.id, self.update)
