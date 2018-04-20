@@ -1,9 +1,12 @@
 from core.aochat.bot import Bot
 from core.character_manager import CharacterManager
+from core.access_manager import AccessManager
+from core.setting_manager import SettingManager
 from tools.text import Text
 from core.decorators import instance
 from tools.chat_blob import ChatBlob
 from core.aochat import server_packets, client_packets
+from tools.setting_types import TextSettingType, ColorSettingType, NumberSettingType
 from tools.bot_status import BotStatus
 import os
 
@@ -23,6 +26,9 @@ class Mangopie(Bot):
     def inject(self, registry):
         self.db = registry.get_instance("db")
         self.character_manager: CharacterManager = registry.get_instance("character_manager")
+        self.setting_manager: SettingManager = registry.get_instance("setting_manager")
+        self.access_manager: AccessManager = registry.get_instance("access_manager")
+
         self.text: Text = registry.get_instance("text")
 
     def init(self, config, registry):
@@ -47,27 +53,30 @@ class Mangopie(Bot):
 
     def pre_start(self):
         pass
-        # self.access_manager.register_access_level("superadmin", 10, self.check_superadmin)
+        self.access_manager.register_access_level("superadmin", 10, self.check_superadmin)
+        self.access_manager.register_access_level("admin", 20, self.check_superadmin)
+        self.access_manager.register_access_level("moderator", 30, self.check_superadmin)
+        self.access_manager.register_access_level("member", 90, self.check_superadmin)
         # self.event_manager.register_event_type("connect")
         # self.event_manager.register_event_type("packet")
 
     def start(self):
         pass
-        # self.setting_manager.register("org_channel_max_page_length", 7500, "Maximum size of blobs in org channel",
-        #                               NumberSettingType([4500, 6000, 7500, 9000, 10500, 12000]), "core.system")
-        # self.setting_manager.register("private_message_max_page_length", 7500, "Maximum size of blobs in private messages",
-        #                               NumberSettingType([4500, 6000, 7500, 9000, 10500, 12000]), "core.system",)
-        # self.setting_manager.register("private_channel_max_page_length", 7500, "Maximum size of blobs in private channel",
-        #                               NumberSettingType([4500, 6000, 7500, 9000, 10500, 12000]), "core.system")
-        # self.setting_manager.register("header_color", "#FFFF00", "color for headers", ColorSettingType(), "core.colors")
-        # self.setting_manager.register("header2_color", "#FCA712", "color for sub-headers", ColorSettingType(), "core.colors")
-        # self.setting_manager.register("highlight_color", "#FFFFFF", "color for highlight", ColorSettingType(), "core.colors")
-        # self.setting_manager.register("neutral_color", "#E6E1A6", "color for neutral faction", ColorSettingType(), "core.colors")
-        # self.setting_manager.register("omni_color", "#FA8484", "color for omni faction", ColorSettingType(), "core.colors")
-        # self.setting_manager.register("clan_color", "#F79410", "color for clan faction", ColorSettingType(), "core.colors")
-        # self.setting_manager.register("unknown_color", "#FF0000", "color for unknown faction", ColorSettingType(), "core.colors")
-        # self.setting_manager.register("notice_color", "#FF8C00", "color for important notices", ColorSettingType(), "core.colors")
-        # self.setting_manager.register("symbol", "!", "Symbol for executing bot commands", TextSettingType(["!", "#", "*", "@", "$", "+", "-"]), "core.system")
+        self.setting_manager.register("org_channel_max_page_length", 7500, "Maximum size of blobs in org channel",
+                                      NumberSettingType([4500, 6000, 7500, 9000, 10500, 12000]), "core.system")
+        self.setting_manager.register("private_message_max_page_length", 7500, "Maximum size of blobs in private messages",
+                                      NumberSettingType([4500, 6000, 7500, 9000, 10500, 12000]), "core.system",)
+        self.setting_manager.register("private_channel_max_page_length", 7500, "Maximum size of blobs in private channel",
+                                      NumberSettingType([4500, 6000, 7500, 9000, 10500, 12000]), "core.system")
+        self.setting_manager.register("header_color", "#FFFF00", "color for headers", ColorSettingType(), "core.colors")
+        self.setting_manager.register("header2_color", "#FCA712", "color for sub-headers", ColorSettingType(), "core.colors")
+        self.setting_manager.register("highlight_color", "#FFFFFF", "color for highlight", ColorSettingType(), "core.colors")
+        self.setting_manager.register("neutral_color", "#E6E1A6", "color for neutral faction", ColorSettingType(), "core.colors")
+        self.setting_manager.register("omni_color", "#FA8484", "color for omni faction", ColorSettingType(), "core.colors")
+        self.setting_manager.register("clan_color", "#F79410", "color for clan faction", ColorSettingType(), "core.colors")
+        self.setting_manager.register("unknown_color", "#FF0000", "color for unknown faction", ColorSettingType(), "core.colors")
+        self.setting_manager.register("notice_color", "#FF8C00", "color for important notices", ColorSettingType(), "core.colors")
+        self.setting_manager.register("symbol", "!", "Symbol for executing bot commands", TextSettingType(["!", "#", "*", "@", "$", "+", "-"]), "core.system")
 
     def check_superadmin(self, char_id):
         char_name = self.character_manager.resolve_char_to_name(char_id)

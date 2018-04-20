@@ -1,4 +1,5 @@
 from core.decorators import instance
+from core.setting_manager import SettingManager
 
 
 @instance()
@@ -7,8 +8,8 @@ class Text:
         pass
 
     def inject(self, registry):
-        # self.setting_manager: SettingManager = registry.get_instance("setting_manager")
-        self.bot = registry.get_instance("budabot")
+        self.setting_manager: SettingManager = registry.get_instance("setting_manager")
+        self.bot = registry.get_instance("mangopie")
 
     def make_chatcmd(self, name, msg, style=""):
         msg = msg.strip()

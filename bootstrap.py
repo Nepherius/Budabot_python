@@ -10,11 +10,15 @@ def start():
     try:
         with open('./conf/config.json') as cfg:
             config = json.load(cfg)
+
         Registry.load_instances(["core", os.path.join("modules", "core"), os.path.join("modules", "addons")])
         Registry.inject_all()
+
         bot = Registry.get_instance("mangopie")
+
         db = Registry.get_instance("db")
         db.connect(config["db_host"], config["db_name"])
+
         bot.init(config, Registry)
 
         if int(config["dimension"]) == 1:
@@ -35,9 +39,10 @@ def start():
             status = bot.run()
             bot.disconnect()
             exit(status.value)
+
     except ConnectionFailure:
         print("Connection to database failed.")
-        exit(0)
+        exit(1)
 
     except FileNotFoundError:
         print('Configuration file not found.')
@@ -49,11 +54,10 @@ def start():
             start()
         else:
             print(
-                'You can manually create an input by editing the template /conf/config.template.json and rename it to config.json')
+                'You can manually create a config by editing the template /conf/config.template.json and rename it to config.json')
             exit(0)
 
     except KeyboardInterrupt:
         exit(0)
-
 
 start()
