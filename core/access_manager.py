@@ -18,6 +18,17 @@ class AccessManager:
         self.access_levels.append({"label": label.lower(), "level": level, "handler": handler})
         self.access_levels = sorted(self.access_levels, key=lambda k: k["level"])
 
+    def check_admin(self, char_id):
+        access_level = self.get_admin_level(char_id)
+        return access_level == self.ADMIN or access_level == self.MODERATOR
+
+    def admin_level(self, char_id):
+        data = self.db.find({"char_id": char_id})
+        if data:
+            return data['access_level']
+        else:
+            return None
+
     def get_access_levels(self):
         return self.access_levels
 

@@ -28,7 +28,7 @@ class Mangopie(Bot):
         self.character_manager: CharacterManager = registry.get_instance("character_manager")
         self.setting_manager: SettingManager = registry.get_instance("setting_manager")
         self.access_manager: AccessManager = registry.get_instance("access_manager")
-
+        self.command_manager = registry.get_instance("command_manager")
         self.text: Text = registry.get_instance("text")
 
     def init(self, config, registry):
@@ -36,19 +36,15 @@ class Mangopie(Bot):
         self.dimension = 5
 
         # prepare commands, events, and settings
-        # self.db.exec("UPDATE command_config SET verified = 0")
-        # self.db.exec("UPDATE event_config SET verified = 0")
-        # self.db.exec("UPDATE setting SET verified = 0")
+        self.db.client['commands'].update_many({}, {'$set': {'verified': 0}})
+        self.db.client['settings'].update_many({}, {'$set': {'verified': 0}})
 
         registry.pre_start_all()
         registry.start_all()
 
         # remove commands, events, and settings that are no longer registered
-        #         self.db.exec("DELETE FROM command_config WHERE verified = 0")
-        # self.db.exec("DELETE FROM event_config WHERE verified = 0")
-        # self.db.exec("DELETE FROM timer_event WHERE handler NOT IN (SELECT handler FROM event_config WHERE event_type = ?)", ["timer"])
-        # self.db.exec("DELETE FROM setting WHERE verified = 0")
-
+        self.db.delete_all('settings', {'verified': 0})
+        self.db.delete_all('commands', {'verified': 0})
         self.status = BotStatus.RUN
 
     def pre_start(self):
@@ -61,22 +57,31 @@ class Mangopie(Bot):
         # self.event_manager.register_event_type("packet")
 
     def start(self):
-        pass
         self.setting_manager.register("org_channel_max_page_length", 7500, "Maximum size of blobs in org channel",
                                       NumberSettingType([4500, 6000, 7500, 9000, 10500, 12000]), "core.system")
-        self.setting_manager.register("private_message_max_page_length", 7500, "Maximum size of blobs in private messages",
-                                      NumberSettingType([4500, 6000, 7500, 9000, 10500, 12000]), "core.system",)
-        self.setting_manager.register("private_channel_max_page_length", 7500, "Maximum size of blobs in private channel",
+        self.setting_manager.register("private_message_max_page_length", 7500,
+                                      "Maximum size of blobs in private messages",
+                                      NumberSettingType([4500, 6000, 7500, 9000, 10500, 12000]), "core.system", )
+        self.setting_manager.register("private_channel_max_page_length", 7500,
+                                      "Maximum size of blobs in private channel",
                                       NumberSettingType([4500, 6000, 7500, 9000, 10500, 12000]), "core.system")
         self.setting_manager.register("header_color", "#FFFF00", "color for headers", ColorSettingType(), "core.colors")
-        self.setting_manager.register("header2_color", "#FCA712", "color for sub-headers", ColorSettingType(), "core.colors")
-        self.setting_manager.register("highlight_color", "#FFFFFF", "color for highlight", ColorSettingType(), "core.colors")
-        self.setting_manager.register("neutral_color", "#E6E1A6", "color for neutral faction", ColorSettingType(), "core.colors")
-        self.setting_manager.register("omni_color", "#FA8484", "color for omni faction", ColorSettingType(), "core.colors")
-        self.setting_manager.register("clan_color", "#F79410", "color for clan faction", ColorSettingType(), "core.colors")
-        self.setting_manager.register("unknown_color", "#FF0000", "color for unknown faction", ColorSettingType(), "core.colors")
-        self.setting_manager.register("notice_color", "#FF8C00", "color for important notices", ColorSettingType(), "core.colors")
-        self.setting_manager.register("symbol", "!", "Symbol for executing bot commands", TextSettingType(["!", "#", "*", "@", "$", "+", "-"]), "core.system")
+        self.setting_manager.register("header2_color", "#FCA712", "color for sub-headers", ColorSettingType(),
+                                      "core.colors")
+        self.setting_manager.register("highlight_color", "#FFFFFF", "color for highlight", ColorSettingType(),
+                                      "core.colors")
+        self.setting_manager.register("neutral_color", "#E6E1A6", "color for neutral faction", ColorSettingType(),
+                                      "core.colors")
+        self.setting_manager.register("omni_color", "#FA8484", "color for omni faction", ColorSettingType(),
+                                      "core.colors")
+        self.setting_manager.register("clan_color", "#F79410", "color for clan faction", ColorSettingType(),
+                                      "core.colors")
+        self.setting_manager.register("unknown_color", "#FF0000", "color for unknown faction", ColorSettingType(),
+                                      "core.colors")
+        self.setting_manager.register("notice_color", "#FF8C00", "color for important notices", ColorSettingType(),
+                                      "core.colors")
+        self.setting_manager.register("symbol", "!", "Symbol for executing bot commands",
+                                      TextSettingType(["!", "#", "*", "@", "$", "+", "-"]), "core.system")
 
     def check_superadmin(self, char_id):
         char_name = self.character_manager.resolve_char_to_name(char_id)
