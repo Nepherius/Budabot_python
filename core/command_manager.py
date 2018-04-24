@@ -20,7 +20,6 @@ class CommandManager:
         self.handlers = collections.defaultdict(list)
         self.logger = Logger("command_manager")
         self.channels = {}
-        self.deferred_register = []
 
     def inject(self, registry):
         self.db = registry.get_instance("db")
@@ -36,7 +35,6 @@ class CommandManager:
         self.register_command_channel("Private Message", "msg")
         self.register_command_channel("Org Channel", "org")
         self.register_command_channel("Private Channel", "priv")
-
 
     def start(self):
         # process decorators
@@ -71,11 +69,11 @@ class CommandManager:
 
             if row is None:
                 # add new command commands
-                print(command,sub_command,access_level,channel,module)
                 self.db.insert('commands',
                                {'command': command, 'sub_command': sub_command, 'access_level': access_level,
-                               'channel': channel, 'module': module, 'verified': 0, 'enabled': 1})
-            elif row['verified']:
+                                'channel': channel, 'module': module, 'verified': 1, 'enabled': 1})
+
+            elif 'verified' in row and row['verified']:
                 if row['module'] != module:
                     self.logger.warning("module different for different forms of command '%s' and sub_command '%s'" % (
                         command, sub_command))
@@ -88,7 +86,8 @@ class CommandManager:
 
         # save reference to command handler
         r = re.compile(self.get_regex_from_params(params), re.IGNORECASE)
-        self.handlers[command_key].append({"regex": r, "callback": handler, "help": help_text, "description": description})
+        self.handlers[command_key].append(
+            {"regex": r, "callback": handler, "help": help_text, "description": description})
 
     def handle_private_message(self, packet: server_packets.PrivateMessage):
         # since the command symbol is not required for private messages,
@@ -138,7 +137,8 @@ class CommandManager:
                 cmd_config, matches, handler = self.get_matches(cmd_configs, command_args)
                 if matches:
                     if self.access_manager.check_access(char_id, cmd_config['access_level']):
-                        sender = MapObject({"name": self.character_manager.resolve_char_to_name(char_id), "char_id": char_id})
+                        sender = MapObject(
+                            {"name": self.character_manager.resolve_char_to_name(char_id), "char_id": char_id})
                         handler["callback"](channel, sender, reply, matches)
                     else:
                         self.access_denied_response(char_id, cmd_config, reply)
@@ -157,13 +157,11 @@ class CommandManager:
 
     def get_help_text(self, char, command_str, channel):
         data = self.db.find_all('commands', {'command': command_str, 'channel': channel, 'enabled': 1})
-        print(data)
         # filter out commands that character does not have access level for
         data = filter(lambda row: self.access_manager.check_access(char, row['access_level']), data)
 
         def read_help_text(row):
             command_key = self.get_command_key(row['command'], row['sub_command'])
-            print(command_key)
             return filter(lambda x: x is not None, map(lambda handler: handler["help"], self.handlers[command_key]))
 
         content = "\n\n".join(flatmap(read_help_text, data))
@@ -195,13 +193,14 @@ class CommandManager:
             return command
 
     def get_matches(self, cmd_configs, command_args):
-        command_key = self.get_command_key(cmd_configs['command'], cmd_configs['sub_command'])
-        handlers = self.handlers[command_key]
-        for handler in handlers:
-            matches = handler["regex"].match(command_args)
-            if matches:
-                return cmd_configs, matches, handler
-        return None, None
+        for row in cmd_configs:
+            command_key = self.get_command_key(row['command'], row['sub_command'])
+            handlers = self.handlers[command_key]
+            for handler in handlers:
+                matches = handler["regex"].match(command_args)
+                if matches:
+                    return row, matches, handler
+        return None, None, None
 
     def get_command_parts(self, message):
         parts = message.split(" ", 1)
@@ -210,16 +209,15 @@ class CommandManager:
         else:
             return parts[0].lower(), ""
 
-    def get_command_configs(self, command, channel=None, enabled=True, sub_command=None):
+    def get_command_configs(self, command, channel=None, enabled=1, sub_command=None):
         query = {"command": command}
-        params = [command]
         if channel:
             query['channel'] = channel
         if enabled:
             query['enabled'] = enabled
         if sub_command:
             query['sub_command'] = sub_command
-        return self.db.find('commands', query, params)
+        return self.db.find_all('commands', query)
 
     def register_command_channel(self, label, value):
         if value in self.channels:

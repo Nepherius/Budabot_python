@@ -30,12 +30,15 @@ class Mangopie(Bot):
         self.access_manager: AccessManager = registry.get_instance("access_manager")
         self.command_manager = registry.get_instance("command_manager")
         self.text: Text = registry.get_instance("text")
+        self.pork_manager = registry.get_instance("pork_manager")
 
     def init(self, config, registry):
         self.superadmin = config["superadmin"].capitalize()
         self.dimension = 5
 
-        # prepare commands, events, and settings
+        # prepare indexes, commands, events, and settings
+        self.db.client['admin'].create_index("char_id", unique=True)
+        self.db.client['player'].create_index("char_id", unique=True)
         self.db.client['commands'].update_many({}, {'$set': {'verified': 0}})
         self.db.client['settings'].update_many({}, {'$set': {'verified': 0}})
 
@@ -47,12 +50,12 @@ class Mangopie(Bot):
         self.db.delete_all('commands', {'verified': 0})
         self.status = BotStatus.RUN
 
+    def post_start(self):
+        self.pork_manager.get_character_info(self.superadmin)
+
     def pre_start(self):
         pass
         self.access_manager.register_access_level("superadmin", 10, self.check_superadmin)
-        self.access_manager.register_access_level("admin", 20, self.check_superadmin)
-        self.access_manager.register_access_level("moderator", 30, self.check_superadmin)
-        self.access_manager.register_access_level("member", 90, self.check_superadmin)
         # self.event_manager.register_event_type("connect")
         # self.event_manager.register_event_type("packet")
 
@@ -93,6 +96,7 @@ class Mangopie(Bot):
 
         self.ready = True
         # self.event_manager.fire_event("connect", None)
+        self.post_start()
 
         while self.status == BotStatus.RUN:
             self.iterate()

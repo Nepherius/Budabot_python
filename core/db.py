@@ -1,8 +1,9 @@
 from core.decorators import instance
 from pymongo import MongoClient
+from pymongo.errors import DuplicateKeyError
 from pymongo import monitoring
 from tools.logger import Logger
-
+import json
 
 @instance()
 class DB:
@@ -12,22 +13,32 @@ class DB:
         self.logger = Logger("MongoDB")
 
     def connect(self, host, name):
-        self.connection = MongoClient('mongodb://%s' % host, event_listeners=[CommandLogger()])# event_listeners=[CommandLogger()]
+        self.connection = MongoClient('mongodb://%s' % host)  # event_listeners=[CommandLogger()]
         self.client = self.connection[name]
         # Test db connection on start up, do not remove
         self.connection.admin.command('ismaster')
 
     def insert(self, table, query):
-        return self.client[table].insert_one(query)
+        try:
+            return self.client[table].insert_one(query)
+        except DuplicateKeyError:
+            self.logger.warning('Duplicate error')
+            return False
 
     def update(self, table, target, newVal):
         return self.client[table].update_one(target, {"$set": newVal})
 
+    def update_all(self, table, target, newVal):
+        return self.client[table].update_many(target, {"$set": newVal})
+
     def find(self, table, query, params=None):
         return self.client[table].find_one(query)
 
-    def find_all(self,table, query):
+    def find_all(self, table, query):
         return self.client[table].find(query).sort("module")
+
+    def delete(self, table, query):
+        return self.client[table].delete_one(query)
 
     def delete_all(self, table, query):
         return self.client[table].delete_many(query)
