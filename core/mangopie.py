@@ -1,7 +1,9 @@
 from core.aochat.bot import Bot
+from core.buddy_manager import BuddyManager
 from core.character_manager import CharacterManager
 from core.access_manager import AccessManager
 from core.setting_manager import SettingManager
+from core.public_channel_manager import PublicChannelManager
 from tools.text import Text
 from core.decorators import instance
 from tools.chat_blob import ChatBlob
@@ -25,12 +27,15 @@ class Mangopie(Bot):
 
     def inject(self, registry):
         self.db = registry.get_instance("db")
+        self.buddy_manager: BuddyManager = registry.get_instance("buddy_manager")
         self.character_manager: CharacterManager = registry.get_instance("character_manager")
         self.setting_manager: SettingManager = registry.get_instance("setting_manager")
         self.access_manager: AccessManager = registry.get_instance("access_manager")
         self.command_manager = registry.get_instance("command_manager")
+        self.public_channel_manager: PublicChannelManager = registry.get_instance("public_channel_manager")
         self.text: Text = registry.get_instance("text")
         self.pork_manager = registry.get_instance("pork_manager")
+        self.event_manager = registry.get_instance("event_manager")
 
     def init(self, config, registry):
         self.superadmin = config["superadmin"].capitalize()
@@ -40,6 +45,7 @@ class Mangopie(Bot):
         self.db.client['admin'].create_index("char_id", unique=True)
         self.db.client['player'].create_index("char_id", unique=True)
         self.db.client['commands'].update_many({}, {'$set': {'verified': 0}})
+        self.db.client['event_config'].update_many({}, {'$set': {'verified': 0}})
         self.db.client['settings'].update_many({}, {'$set': {'verified': 0}})
 
         registry.pre_start_all()
@@ -48,6 +54,10 @@ class Mangopie(Bot):
         # remove commands, events, and settings that are no longer registered
         self.db.delete_all('settings', {'verified': 0})
         self.db.delete_all('commands', {'verified': 0})
+        self.db.delete_all('event_config', {'verified': 0})
+        # self.db.exec(
+        #     "DELETE FROM timer_event WHERE handler NOT IN (SELECT handler FROM event_config WHERE event_type = ?)",
+        #     ["timer"])
         self.status = BotStatus.RUN
 
     def post_start(self):
@@ -56,8 +66,8 @@ class Mangopie(Bot):
     def pre_start(self):
         pass
         self.access_manager.register_access_level("superadmin", 10, self.check_superadmin)
-        # self.event_manager.register_event_type("connect")
-        # self.event_manager.register_event_type("packet")
+        self.event_manager.register_event_type("connect")
+        self.event_manager.register_event_type("packet")
 
     def start(self):
         self.setting_manager.register("org_channel_max_page_length", 7500, "Maximum size of blobs in org channel",
@@ -95,7 +105,7 @@ class Mangopie(Bot):
             pass
 
         self.ready = True
-        # self.event_manager.fire_event("connect", None)
+        self.event_manager.fire_event("connect", None)
         self.post_start()
 
         while self.status == BotStatus.RUN:
@@ -109,6 +119,7 @@ class Mangopie(Bot):
         self.packet_handlers[packet_id] = handlers
 
     def iterate(self):
+        self.event_manager.check_for_timer_events()
         packet = self.read_packet()
         if packet is not None:
             if isinstance(packet, server_packets.PrivateMessage):
@@ -123,7 +134,7 @@ class Mangopie(Bot):
             for handler in self.packet_handlers.get(packet.id, []):
                 handler(packet)
 
-            # self.event_manager.fire_event("packet:" + str(packet.id), packet)
+            self.event_manager.fire_event("packet:" + str(packet.id), packet)
 
             return packet
         else:

@@ -13,7 +13,7 @@ class DB:
         self.logger = Logger("MongoDB")
 
     def connect(self, host, name):
-        self.connection = MongoClient('mongodb://%s' % host)  # event_listeners=[CommandLogger()]
+        self.connection = MongoClient('mongodb://%s' % host)
         self.client = self.connection[name]
         # Test db connection on start up, do not remove
         self.connection.admin.command('ismaster')
@@ -31,11 +31,11 @@ class DB:
     def update_all(self, table, target, newVal):
         return self.client[table].update_many(target, {"$set": newVal})
 
-    def find(self, table, query, params=None):
+    def find(self, table, query):
         return self.client[table].find_one(query)
 
     def find_all(self, table, query):
-        return self.client[table].find(query).sort("module")
+        return self.client[table].find(query)
 
     def delete(self, table, query):
         return self.client[table].delete_one(query)
