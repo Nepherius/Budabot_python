@@ -62,6 +62,7 @@ class Mangopie(Bot):
 
     def post_start(self):
         self.pork_manager.get_character_info(self.superadmin)
+        self.ready = True
 
     def pre_start(self):
         pass
@@ -104,10 +105,8 @@ class Mangopie(Bot):
         while None is not self.iterate():
             pass
 
-        self.ready = True
         self.event_manager.fire_event("connect", None)
         self.post_start()
-
         while self.status == BotStatus.RUN:
             self.iterate()
 

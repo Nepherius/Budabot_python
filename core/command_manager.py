@@ -94,7 +94,7 @@ class CommandManager:
         # since the command symbol is not required for private messages,
         # the command_str must have length of at least 1 in order to be valid,
         # otherwise it is ignored
-        if len(packet.message) < 1:
+        if len(packet.message) < 1 or not self.bot.is_ready():
             return
 
         if packet.message[:1] == '!':
