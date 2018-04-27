@@ -2,7 +2,7 @@ from core.decorators import instance
 from core.character_manager import CharacterManager
 from core.aochat import server_packets
 from core.aochat import client_packets
-from core.logger import Logger
+from tools.logger import Logger
 
 
 @instance()
@@ -13,11 +13,11 @@ class BuddyManager:
     def __init__(self):
         self.buddy_list = {}
         self.buddy_list_size = 1000
-        self.logger = Logger("Budabot")
+        self.logger = Logger("Mangopie")
 
     def inject(self, registry):
         self.character_manager: CharacterManager = registry.get_instance("character_manager")
-        self.bot = registry.get_instance("budabot")
+        self.bot = registry.get_instance("mangopie")
         self.event_manager = registry.get_instance("event_manager")
 
     def pre_start(self):

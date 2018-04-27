@@ -1,20 +1,20 @@
 from core.aochat.bot import Bot
 from core.buddy_manager import BuddyManager
 from core.character_manager import CharacterManager
-from core.public_channel_manager import PublicChannelManager
-from core.setting_manager import SettingManager
 from core.access_manager import AccessManager
-from core.text import Text
+from core.setting_manager import SettingManager
+from core.public_channel_manager import PublicChannelManager
+from tools.text import Text
 from core.decorators import instance
-from core.chat_blob import ChatBlob
-from core.setting_types import TextSettingType, ColorSettingType, NumberSettingType
+from tools.chat_blob import ChatBlob
 from core.aochat import server_packets, client_packets
-from core.bot_status import BotStatus
+from tools.setting_types import TextSettingType, ColorSettingType, NumberSettingType
+from tools.bot_status import BotStatus
 import os
 
 
 @instance()
-class Budabot(Bot):
+class Mangopie(Bot):
     def __init__(self):
         super().__init__()
         self.ready = False
@@ -29,37 +29,42 @@ class Budabot(Bot):
         self.db = registry.get_instance("db")
         self.buddy_manager: BuddyManager = registry.get_instance("buddy_manager")
         self.character_manager: CharacterManager = registry.get_instance("character_manager")
-        self.public_channel_manager: PublicChannelManager = registry.get_instance("public_channel_manager")
-        self.text: Text = registry.get_instance("text")
         self.setting_manager: SettingManager = registry.get_instance("setting_manager")
         self.access_manager: AccessManager = registry.get_instance("access_manager")
         self.command_manager = registry.get_instance("command_manager")
+        self.public_channel_manager: PublicChannelManager = registry.get_instance("public_channel_manager")
+        self.text: Text = registry.get_instance("text")
+        self.pork_manager = registry.get_instance("pork_manager")
         self.event_manager = registry.get_instance("event_manager")
 
     def init(self, config, registry):
         self.superadmin = config["superadmin"].capitalize()
         self.dimension = 5
 
-        self.db.connect(config["database"]["name"])
-        self.db.load_sql_file("core.sql", os.path.dirname(__file__))
-
-        # prepare commands, events, and settings
-        self.db.exec("UPDATE command_config SET verified = 0")
-        self.db.exec("UPDATE event_config SET verified = 0")
-        self.db.exec("UPDATE setting SET verified = 0")
+        # prepare indexes, commands, events, and settings
+        self.db.client['admin'].create_index("char_id", unique=True)
+        self.db.client['player'].create_index("char_id", unique=True)
+        self.db.client['command_config'].update_many({}, {'$set': {'verified': 0}})
+        self.db.client['event_config'].update_many({}, {'$set': {'verified': 0}})
+        self.db.client['settings'].update_many({}, {'$set': {'verified': 0}})
 
         registry.pre_start_all()
         registry.start_all()
 
         # remove commands, events, and settings that are no longer registered
-        self.db.exec("DELETE FROM command_config WHERE verified = 0")
-        self.db.exec("DELETE FROM event_config WHERE verified = 0")
-        self.db.exec("DELETE FROM timer_event WHERE handler NOT IN (SELECT handler FROM event_config WHERE event_type = ?)", ["timer"])
-        self.db.exec("DELETE FROM setting WHERE verified = 0")
-
+        self.db.delete_all('settings', {'verified': 0})
+        self.db.delete_all('command_config', {'verified': 0})
+        self.db.delete_all('event_config', {'verified': 0})
+        # self.db.exec(
+        #     "DELETE FROM timer_event WHERE handler NOT IN (SELECT handler FROM event_config WHERE event_type = ?)",
+        #     ["timer"])
         self.status = BotStatus.RUN
 
+    def post_start(self):
+        self.pork_manager.get_character_info(self.superadmin)
+
     def pre_start(self):
+        pass
         self.access_manager.register_access_level("superadmin", 10, self.check_superadmin)
         self.event_manager.register_event_type("connect")
         self.event_manager.register_event_type("packet")
@@ -67,19 +72,29 @@ class Budabot(Bot):
     def start(self):
         self.setting_manager.register("org_channel_max_page_length", 7500, "Maximum size of blobs in org channel",
                                       NumberSettingType([4500, 6000, 7500, 9000, 10500, 12000]), "core.system")
-        self.setting_manager.register("private_message_max_page_length", 7500, "Maximum size of blobs in private messages",
-                                      NumberSettingType([4500, 6000, 7500, 9000, 10500, 12000]), "core.system",)
-        self.setting_manager.register("private_channel_max_page_length", 7500, "Maximum size of blobs in private channel",
+        self.setting_manager.register("private_message_max_page_length", 7500,
+                                      "Maximum size of blobs in private messages",
+                                      NumberSettingType([4500, 6000, 7500, 9000, 10500, 12000]), "core.system", )
+        self.setting_manager.register("private_channel_max_page_length", 7500,
+                                      "Maximum size of blobs in private channel",
                                       NumberSettingType([4500, 6000, 7500, 9000, 10500, 12000]), "core.system")
         self.setting_manager.register("header_color", "#FFFF00", "color for headers", ColorSettingType(), "core.colors")
-        self.setting_manager.register("header2_color", "#FCA712", "color for sub-headers", ColorSettingType(), "core.colors")
-        self.setting_manager.register("highlight_color", "#FFFFFF", "color for highlight", ColorSettingType(), "core.colors")
-        self.setting_manager.register("neutral_color", "#E6E1A6", "color for neutral faction", ColorSettingType(), "core.colors")
-        self.setting_manager.register("omni_color", "#FA8484", "color for omni faction", ColorSettingType(), "core.colors")
-        self.setting_manager.register("clan_color", "#F79410", "color for clan faction", ColorSettingType(), "core.colors")
-        self.setting_manager.register("unknown_color", "#FF0000", "color for unknown faction", ColorSettingType(), "core.colors")
-        self.setting_manager.register("notice_color", "#FF8C00", "color for important notices", ColorSettingType(), "core.colors")
-        self.setting_manager.register("symbol", "!", "Symbol for executing bot commands", TextSettingType(["!", "#", "*", "@", "$", "+", "-"]), "core.system")
+        self.setting_manager.register("header2_color", "#FCA712", "color for sub-headers", ColorSettingType(),
+                                      "core.colors")
+        self.setting_manager.register("highlight_color", "#FFFFFF", "color for highlight", ColorSettingType(),
+                                      "core.colors")
+        self.setting_manager.register("neutral_color", "#E6E1A6", "color for neutral faction", ColorSettingType(),
+                                      "core.colors")
+        self.setting_manager.register("omni_color", "#FA8484", "color for omni faction", ColorSettingType(),
+                                      "core.colors")
+        self.setting_manager.register("clan_color", "#F79410", "color for clan faction", ColorSettingType(),
+                                      "core.colors")
+        self.setting_manager.register("unknown_color", "#FF0000", "color for unknown faction", ColorSettingType(),
+                                      "core.colors")
+        self.setting_manager.register("notice_color", "#FF8C00", "color for important notices", ColorSettingType(),
+                                      "core.colors")
+        self.setting_manager.register("symbol", "!", "Symbol for executing bot commands",
+                                      TextSettingType(["!", "#", "*", "@", "$", "+", "-"]), "core.system")
 
     def check_superadmin(self, char_id):
         char_name = self.character_manager.resolve_char_to_name(char_id)
@@ -91,6 +106,7 @@ class Budabot(Bot):
 
         self.ready = True
         self.event_manager.fire_event("connect", None)
+        self.post_start()
 
         while self.status == BotStatus.RUN:
             self.iterate()
@@ -138,7 +154,8 @@ class Budabot(Bot):
         if char_id is None:
             self.logger.warning("Could not send message to %s, could not find char id" % char)
         else:
-            for page in self.get_text_pages(msg, self.setting_manager.get("private_message_max_page_length").get_value()):
+            for page in self.get_text_pages(msg,
+                                            self.setting_manager.get("private_message_max_page_length").get_value()):
                 self.logger.log_tell("To", self.character_manager.get_char_name(char_id), page)
                 packet = client_packets.PrivateMessage(char_id, page, "\0")
                 self.send_packet(packet)
@@ -149,9 +166,11 @@ class Budabot(Bot):
 
         private_channel_id = self.character_manager.resolve_char_to_id(private_channel)
         if private_channel_id is None:
-            self.logger.warning("Could not send message to private channel %s, could not find private channel" % private_channel)
+            self.logger.warning(
+                "Could not send message to private channel %s, could not find private channel" % private_channel)
         else:
-            for page in self.get_text_pages(msg, self.setting_manager.get("private_channel_max_page_length").get_value()):
+            for page in self.get_text_pages(msg,
+                                            self.setting_manager.get("private_channel_max_page_length").get_value()):
                 packet = client_packets.PrivateChannelMessage(private_channel_id, page, "\0")
                 self.send_packet(packet)
 

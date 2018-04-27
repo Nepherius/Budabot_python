@@ -1,5 +1,5 @@
 from core.decorators import instance, command, event
-from core.command_param_types import Any
+from tools.command_param_types import Any
 from core.private_channel_manager import PrivateChannelManager
 
 
@@ -9,7 +9,7 @@ class PrivateChannelController:
         pass
 
     def inject(self, registry):
-        self.bot = registry.get_instance("budabot")
+        self.bot = registry.get_instance("mangopie")
         self.private_channel_manager = registry.get_instance("private_channel_manager")
         self.character_manager = registry.get_instance("character_manager")
 
@@ -28,7 +28,9 @@ class PrivateChannelController:
     def invite_cmd(self, channel, sender, reply, args):
         char = args[1].capitalize()
         char_id = self.character_manager.resolve_char_to_id(char)
-        if char_id:
+        if sender.char_id == char_id:
+            self.private_channel_manager.invite(sender.char_id)
+        elif char_id:
             self.bot.send_private_message(char_id, "You have been invited to the private channel by <highlight>%s<end>." % sender.name)
             self.private_channel_manager.invite(char_id)
             reply("You have invited <highlight>%s<end> to the private channel." % char)

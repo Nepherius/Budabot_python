@@ -1,6 +1,7 @@
 from core.decorators import instance, command
-from core.command_param_types import Any, Const, Options
-from core.chat_blob import ChatBlob
+from tools.command_param_types import Any, Const, Options
+from tools.chat_blob import ChatBlob
+from tools.map_object import MapObject
 
 
 @instance()
@@ -18,12 +19,16 @@ class AltsController:
     @command(command="alts", params=[], access_level="all",
              description="Show your alts")
     def alts_list_cmd(self, channel, sender, reply, args):
+        count = 0
         alts = self.alts_manager.get_alts(sender.char_id)
         blob = ""
         for alt in alts:
-            blob += "<highlight>%s<end> (%d/<green>%d<end>) %s %s\n" % (alt.name, alt.level, alt.ai_level, alt.faction, alt.profession)
+            count += 1
+            blob += "<highlight>%s<end> (%s/<green>%s<end>) %s %s\n" % (
+                alt['char'][0]['name'], alt['char'][0]['level'], alt['char'][0]['ai_level'], alt['char'][0]['faction'],
+                alt['char'][0]['profession'])
 
-        reply(ChatBlob("Alts for %s (%d)" % (sender.name, len(alts)), blob))
+        reply(ChatBlob("Alts for %s (%d)" % (sender.name, count), blob))
 
     @command(command="alts", params=[Const("add"), Any("character")], access_level="all",
              description="Add an alt")
@@ -61,8 +66,12 @@ class AltsController:
             return
 
         alts = self.alts_manager.get_alts(char_id)
+        count = 0
         blob = ""
         for alt in alts:
-            blob += "<highlight>%s<end> (%d/<green>%d<end>) %s %s\n" % (alt.name, alt.level, alt.ai_level, alt.faction, alt.profession)
+            count += 1
+            blob += "<highlight>%s<end> (%d/<green>%d<end>) %s %s\n" % (
+                alt['char'][0]['name'], alt['char'][0]['level'], alt['char'][0]['ai_level'], alt['char'][0]['faction'],
+                alt['char'][0]['profession'])
 
-        reply(ChatBlob("Alts for %s (%d)" % (name, len(alts)), blob))
+        reply(ChatBlob("Alts for %s (%d)" % (name, count), blob))

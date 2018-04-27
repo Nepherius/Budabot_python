@@ -17,16 +17,23 @@ class AltsManager:
         self.pork_manager = registry.get_instance("pork_manager")
 
     def start(self):
-        self.db.load_sql_file("alts.sql", os.path.dirname(__file__))
+        pass
 
     def get_alts(self, char_id):
-        sql = "SELECT c.* FROM character c " \
-              "LEFT JOIN alts a ON c.char_id = a.char_id AND a.status >= ? " \
-              "WHERE c.char_id = ? OR a.group_id = (" \
-              "SELECT group_id FROM alts WHERE char_id = ?) " \
-              "ORDER BY a.status DESC, c.level DESC"
-
-        return self.db.query(sql, [self.VALIDATED, char_id, char_id])
+        return self.db.client['alts'].aggregate([
+            {
+                '$match': {
+                    'group_id': self.get_group_id(char_id)
+                }
+            },
+            {'$lookup':
+                 {'from': 'player',
+                  'localField': 'char_id',
+                  'foreignField': 'char_id',
+                  'as': 'char'
+                  }
+             }
+        ])
 
     def add_alt(self, sender_char_id, alt_char_id):
         alt_row = self.get_alt_status(alt_char_id)
@@ -35,15 +42,14 @@ class AltsManager:
 
         sender_row = self.get_alt_status(sender_char_id)
         if sender_row:
-            if sender_row.status == self.MAIN or sender_row.status == self.VALIDATED:
-                params = [alt_char_id, sender_row.group_id, self.VALIDATED]
+            if sender_row['status'] == self.MAIN or sender_row['status'] == self.VALIDATED:
+                params = [alt_char_id, sender_row['group_id'], self.VALIDATED]
             else:
-                params = [alt_char_id, sender_row.group_id, self.UNVALIDATED]
+                params = [alt_char_id, sender_row['group_id'], self.UNVALIDATED]
         else:
             # main does not exist, create entry for it
             group_id = self.get_next_group_id()
-            self.db.exec("INSERT INTO alts (char_id, group_id, status) VALUES (?, ?, ?)",
-                         [sender_char_id, group_id, self.MAIN])
+            self.db.insert('alts', {'char_id': sender_char_id, 'group_id': group_id, 'status': self.MAIN})
 
             # make sure char info exists in character table
             self.pork_manager.load_character_info(sender_char_id)
@@ -52,7 +58,7 @@ class AltsManager:
 
         # make sure char info exists in character table
         self.pork_manager.load_character_info(alt_char_id)
-        self.db.exec("INSERT INTO alts (char_id, group_id, status) VALUES (?, ?, ?)", params)
+        self.db.insert('alts', {'char_id': params[0], 'group_id': params[1], 'status': params[2]})
         return True
 
     def remove_alt(self, sender_char_id, alt_char_id):
@@ -60,19 +66,23 @@ class AltsManager:
         sender_row = self.get_alt_status(sender_char_id)
 
         # sender and alt do not belong to the same group id
-        if not alt_row or not sender_row or alt_row.group_id != sender_row.group_id:
+        if not alt_row or not sender_row or alt_row['group_id'] != sender_row['group_id']:
             return False
 
         # cannot remove alt from an unvalidated sender
-        if sender_row.status == self.UNVALIDATED:
+        if sender_row['status'] == self.UNVALIDATED:
             return False
 
-        self.db.exec("DELETE FROM alts WHERE char_id = ?", [alt_char_id])
+        self.db.delete('alts', {'char_id': alt_char_id})
         return True
 
     def get_alt_status(self, char_id):
-        return self.db.query_single("SELECT group_id, status FROM alts WHERE char_id = ?", [char_id])
+        return self.db.find('alts', {'char_id': char_id})
+
+    def get_group_id(self, char_id):
+        row = self.db.find('alts', {'char_id': char_id})
+        return row['group_id']
 
     def get_next_group_id(self):
-        row = self.db.query_single("SELECT (IFNULL(MAX(group_id), 0) + 1) AS next_group_id FROM alts")
-        return row.next_group_id
+        row = list(self.db.client['alts'].find().sort('group_id', -1).limit(1))
+        return int(row[0]['group_id']) + 1 if row else 1

@@ -1,6 +1,6 @@
 from core.decorators import instance, command
-from core.chat_blob import ChatBlob
-from core.command_param_types import Any
+from tools.chat_blob import ChatBlob
+from tools.command_param_types import Any
 
 
 @instance()
@@ -20,17 +20,15 @@ class HelpController:
     @command(command="help", params=[], access_level="all",
              description="Show a list of commands to get help with")
     def help_list_cmd(self, channel, sender, reply, args):
-        data = self.db.query("SELECT command, module, access_level FROM command_config "
-                             "ORDER BY module ASC, command ASC")
+        data = self.db.client['command_config'].find().sort([('module', 1), ('command', 1)])
         blob = ""
         current_group = ""
         current_module = ""
         current_command = ""
         for row in data:
-            if not self.access_manager.check_access(sender.char_id, row.access_level):
+            if not self.access_manager.check_access(sender.char_id, row['access_level']):
                 continue
-
-            parts = row.module.split(".")
+            parts = row['module'].split(".")
             group = parts[0]
             module = parts[1]
             if group != current_group:
@@ -41,10 +39,9 @@ class HelpController:
                 current_module = module
                 blob += "\n" + module + ":"
 
-            if row.command != current_command:
-                current_command = row.command
-                blob += " " + self.text.make_chatcmd(row.command, "/tell <myname> help " + row.command)
-
+            if row['command'] != current_command:
+                current_command = row['command']
+                blob += " " + self.text.make_chatcmd(row['command'], "/tell <myname> help " + row['command'])
         reply(ChatBlob("Help (main)", blob))
 
     @command(command="help", params=[Any("command")], access_level="all",

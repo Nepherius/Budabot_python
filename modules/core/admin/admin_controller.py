@@ -1,7 +1,7 @@
 from core.decorators import instance, command
-from core.chat_blob import ChatBlob
-from core.command_param_types import Any, Const, Options
-from core.admin.admin_manager import AdminManager
+from tools.chat_blob import ChatBlob
+from tools.command_param_types import Any, Const, Options
+from core.admin_manager import AdminManager
 
 
 @instance()
@@ -10,7 +10,7 @@ class AdminController:
         pass
 
     def inject(self, registry):
-        self.bot = registry.get_instance("budabot")
+        self.bot = registry.get_instance("mangopie")
         self.admin_manager = registry.get_instance("admin_manager")
         self.character_manager = registry.get_instance("character_manager")
         self.pork_manager = registry.get_instance("pork_manager")
@@ -18,20 +18,24 @@ class AdminController:
     @command(command="admin", params=[], access_level="all",
              description="Show the admin list")
     def admin_list_cmd(self, channel, sender, reply, args):
-        admins = self.admin_manager.get_all()
+        admins = list(self.admin_manager.get_all())
         superadmin = self.pork_manager.get_character_info(self.bot.superadmin)
-        superadmin.access_level = "superadmin"
+        superadmin['access_level'] = "superadmin"
         admins.insert(0, superadmin)
 
         blob = ""
         current_access_level = ""
         for row in admins:
-            if row.access_level != current_access_level:
-                blob += "\n<header2>%s<end>\n" % row.access_level.capitalize()
-                current_access_level = row.access_level
 
-            blob += row.name + "\n"
+            if row['access_level'] != current_access_level:
+                blob += "\n<header2>%s<end>\n" % row['access_level'].capitalize()
+                current_access_level = row['access_level']
 
+            # Exception for inserted superadmin
+            if 'char' in row.keys():
+                blob += row['char'][0]['name'] + "\n"
+            else:
+                blob += row['name'] + "\n"
         reply(ChatBlob("Admin List (%d)" % len(admins), blob))
 
     @command(command="admin", params=[Const("add"), Any("character")], access_level="superadmin",

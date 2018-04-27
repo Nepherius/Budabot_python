@@ -1,4 +1,4 @@
-from core.logger import Logger
+from tools.logger import Logger
 from core.decorators import instance
 from core.aochat import server_packets, client_packets
 
@@ -9,11 +9,11 @@ class PrivateChannelManager:
     LEFT_PRIVATE_CHANNEL_EVENT = "private_channel_left"
 
     def __init__(self):
-        self.logger = Logger("Budabot")
+        self.logger = Logger("Mangopie")
         self.private_channel_chars = {}
 
     def inject(self, registry):
-        self.bot = registry.get_instance("budabot")
+        self.bot = registry.get_instance("mangopie")
         self.event_manager = registry.get_instance("event_manager")
         self.character_manager = registry.get_instance("character_manager")
 

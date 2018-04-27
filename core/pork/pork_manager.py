@@ -1,9 +1,8 @@
 from core.decorators import instance
-from core.map_object import MapObject
+from tools.map_object import MapObject
 from __init__ import none_to_empty_string
 import requests
 import time
-import os
 
 
 @instance()
@@ -12,22 +11,23 @@ class PorkManager:
         pass
 
     def inject(self, registry):
-        self.bot = registry.get_instance("budabot")
+        self.bot = registry.get_instance("mangopie")
         self.db = registry.get_instance("db")
         self.character_manager = registry.get_instance("character_manager")
 
     def start(self):
-        self.db.load_sql_file("character.sql", os.path.dirname(__file__))
+        pass
 
     def get_character_info(self, char):
         # if we have entry in database and it is less than a day old, use that
         char_info = self.get_from_database(char)
-        if char_info and char_info.last_updated > (int(time.time()) - 86400):
-            # TODO append "(cache)" to source field
+        if char_info and char_info['last_updated'] > (int(time.time()) - 86400):
+            char_info['source'] += " (cache)"
             return char_info
 
         char_name = self.character_manager.resolve_char_to_name(char)
-        url = "http://people.anarchy-online.com/character/bio/d/%d/name/%s/bio.xml?data_type=json" % (self.bot.dimension, char_name)
+        url = "http://people.anarchy-online.com/character/bio/d/%d/name/%s/bio.xml?data_type=json" % (
+            self.bot.dimension, char_name)
 
         r = requests.get(url)
         json = r.json()
@@ -100,24 +100,34 @@ class PorkManager:
             self.save_character_info(char_info)
 
     def save_character_info(self, char_info):
-        self.db.exec("DELETE FROM character WHERE char_id = ?", [char_info.char_id])
+        # Remove old data
+        self.db.delete('player', {'char_id': char_info.char_id})
 
-        insert_sql = """
-            INSERT INTO character ( char_id, name, first_name, last_name, level, breed, gender, faction, profession,
-                profession_title, ai_rank, ai_level, org_id, org_name, org_rank_name, org_rank_id, dimension, head_id,
-                pvp_rating, pvp_title, source, last_updated)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """
-
-        self.db.exec(insert_sql, [char_info.char_id, char_info.name, char_info.first_name, char_info.last_name, char_info.level, char_info.breed, char_info.gender,
-                                  char_info.faction, char_info.profession, char_info.profession_title, char_info.ai_rank, char_info.ai_level, char_info.org_id, char_info.org_name,
-                                  char_info.org_rank_name, char_info.org_rank_id, char_info.dimension, char_info.head_id, char_info.pvp_rating, char_info.pvp_title,
-                                  char_info.source, int(time.time())])
+        self.db.insert('player',
+                       {
+                           'char_id': char_info.char_id,
+                           'name': char_info.name,
+                           'first_name': char_info.first_name,
+                           'last_name': char_info.last_name,
+                           'level': char_info.level,
+                           'breed': char_info.breed,
+                           'gender': char_info.gender,
+                           'faction': char_info.faction,
+                           'profession': char_info.profession,
+                           'profession_title ': char_info.profession_title,
+                           'ai_rank': char_info.ai_rank,
+                           'ai_level': char_info.ai_level,
+                           'org_id': char_info.org_id,
+                           'org_name': char_info.org_name,
+                           'org_rank_name': char_info.org_rank_name,
+                           'org_rank_id': char_info.org_rank_id,
+                           'dimension': char_info.dimension,
+                           'head_id': char_info.head_id,
+                           'pvp_rating': char_info.pvp_rating,
+                           'pvp_title': char_info.pvp_title,
+                           'source': char_info.source,
+                           'last_updated': int(time.time())})
 
     def get_from_database(self, char):
         char_id = self.character_manager.resolve_char_to_id(char)
-
-        return self.db.query_single("SELECT char_id, name, first_name, last_name, level, breed, gender, faction, profession, "
-                                    "profession_title, ai_rank, ai_level, org_id, org_name, org_rank_name, org_rank_id, "
-                                    "dimension, head_id, pvp_rating, pvp_title, source, last_updated "
-                                    "FROM character WHERE char_id = ?", [char_id])
+        return self.db.find('player', {'char_id' : char_id})

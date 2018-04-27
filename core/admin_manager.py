@@ -1,4 +1,5 @@
 from core.decorators import instance
+from bson.dbref import DBRef
 import os
 
 
@@ -19,7 +20,7 @@ class AdminManager:
         self.access_manager.register_access_level(self.MODERATOR, 30, self.check_mod)
 
     def start(self):
-        self.db.load_sql_file("admin.sql", os.path.dirname(__file__))
+        pass
 
     def check_admin(self, char_id):
         access_level = self.get_access_level(char_id)
@@ -30,9 +31,9 @@ class AdminManager:
         return access_level == self.MODERATOR
 
     def get_access_level(self, char_id):
-        row = self.db.query_single("SELECT access_level FROM admin WHERE char_id = ?", [char_id])
+        row = self.db.find('admin', {'char_id': char_id})
         if row:
-            return row.access_level
+            return row['access_level']
         else:
             return None
 
@@ -40,15 +41,21 @@ class AdminManager:
         if access_level in [self.MODERATOR, self.ADMIN]:
             # remove any existing admin access level first
             self.remove(char_id)
-            self.db.exec("INSERT INTO admin (char_id, access_level) VALUES (?, ?)", [char_id, access_level])
+            self.db.insert('admin', {'char_id': char_id, 'access_level': access_level})
             return True
         else:
             return False
 
     def remove(self, char_id):
-        return self.db.exec("DELETE FROM admin WHERE char_id = ?", [char_id]) > 0
+        return self.db.delete_all('admin', {'char_id': char_id})
 
     def get_all(self):
-        return self.db.query("SELECT c.*, a.access_level FROM admin a "
-                             "LEFT JOIN character c ON a.char_id = c.char_id "
-                             "ORDER BY a.access_level ASC, c.name ASC")
+        return self.db.client['admin'].aggregate([
+            {'$lookup':
+                 {'from': 'player',
+                  'localField': 'char_id',
+                  'foreignField': 'char_id',
+                  'as': 'char'
+                  }
+             }
+        ])

@@ -1,6 +1,6 @@
 from core.decorators import instance, command
-from core.command_param_types import Const, Any, Options
-from core.chat_blob import ChatBlob
+from tools.command_param_types import Const, Any, Options
+from tools.chat_blob import ChatBlob
 
 
 @instance()
@@ -19,9 +19,11 @@ class AliasController:
     def alias_list_cmd(self, channel, sender, reply, args):
         blob = ""
         data = self.command_alias_manager.get_enabled_aliases()
-        count = len(data)
+        count = 0
         for row in data:
-            blob += row.alias + " - " + row.command + "\n"
+            print(row)
+            count += 1
+            blob += row['alias'] + " - " + row['command'] + "\n"
 
         reply(ChatBlob("Aliases (%d)" % count, blob))
 

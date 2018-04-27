@@ -1,6 +1,6 @@
 from core.decorators import instance
 from core.registry import Registry
-from core.logger import Logger
+from tools.logger import Logger
 from __init__ import get_attrs
 import time
 import os
@@ -47,36 +47,56 @@ class EventManager:
     def register(self, handler, event_type, description, module):
         event_base_type, event_sub_type = self.get_event_type_parts(event_type)
         module = module.lower()
-        handler_name = self.util.get_handler_name(handler)
+        handler_name = self.util.get_handler_name(handler).lower()
 
         if event_base_type not in self.event_types:
-            self.logger.error("Could not register handler '%s' for event type '%s': event type does not exist" % (handler_name, event_type))
+            self.logger.error("Could not register handler '%s' for event type '%s': event type does not exist" % (
+                handler_name, event_type))
             return
 
         if not description:
             self.logger.warning("No description for event_type '%s' and handler '%s'" % (event_type, handler_name))
 
-        row = self.db.query_single("SELECT 1 FROM event_config WHERE event_type = ? AND handler = ?",
-                                   [event_base_type, handler_name])
+        row = self.db.find('event_config', {'event_type': event_base_type, 'handler': handler_name})
 
         if row is None:
             # add new event commands
-            self.db.exec(
-                "INSERT INTO event_config (event_type, event_sub_type, handler, description, module, enabled, verified) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                [event_base_type, event_sub_type, handler_name, description, module, 1, 1])
+            self.db.insert('event_config', {
+                'event_type': event_base_type,
+                'event_sub_type': event_sub_type,
+                'handler': handler_name,
+                'description': description,
+                'module': module,
+                'verified': 1,
+                'enabled': 1
+            })
 
             if event_base_type == "timer":
-                self.db.exec("INSERT INTO timer_event (event_type, event_sub_type, handler, next_run) VALUES (?, ?, ?, ?)",
-                             [event_base_type, event_sub_type, handler_name, int(time.time())])
+                self.db.insert('timer_event', {
+                    'event_type': event_base_type,
+                    'event_sub_type': event_sub_type,
+                    'handler': handler_name,
+                    'next_run': int(time.time())
+                })
         else:
             # mark command as verified
-            self.db.exec(
-                "UPDATE event_config SET verified = ?, module = ?, description = ?, event_sub_type = ? WHERE event_type = ? AND handler = ?",
-                [1, module, description, event_sub_type, event_base_type, handler_name])
+            self.db.update('event_config', {
+                'event_type': event_base_type,
+                'handler': handler_name
+            },{
+                'verified': 1,
+                'module': module,
+                'description': description,
+                'event_sub_type': event_sub_type,
+            })
 
             if event_base_type == "timer":
-                self.db.exec("UPDATE timer_event SET event_sub_type = ? WHERE event_type = ? AND handler = ?",
-                             [event_sub_type, event_base_type, handler_name])
+                self.db.update('timer_event', {
+                    'event_type': event_base_type,
+                    'handler': handler_name
+                }, {
+                    'event_sub_type': event_sub_type
+                })
 
         # load command handler
         self.handlers[handler_name] = handler
@@ -88,12 +108,16 @@ class EventManager:
             self.logger.error("Could not fire event type '%s': event type does not exist" % event_type)
             return
 
-        data = self.db.query("SELECT handler, event_type FROM event_config WHERE event_type = ? AND event_sub_type = ? AND enabled = 1",
-                             [event_base_type, event_sub_type])
+        data = self.db.find_all('event_config', {
+            'event_type': event_base_type,
+            'event_sub_type': event_sub_type,
+            'enabled': 1
+        })
         for row in data:
-            handler = self.handlers.get(row.handler, None)
+            handler = self.handlers.get(row['handler'], None)
             if not handler:
-                self.logger.error("Could not find handler callback for event type '%s' and handler '%s'" % (event_type, row.handler))
+                self.logger.error(
+                    "Could not find handler callback for event type '%s' and handler '%s'" % (event_type, row.handler))
                 return
 
             handler(event_type, event_data)
@@ -109,30 +133,31 @@ class EventManager:
         return event_base_type + ":" + event_sub_type
 
     def check_for_timer_events(self):
-        timestamp = int(time.time())
+        pass
+        # timestamp = int(time.time())
 
-        # timer events will execute not more often than once per second
-        if self.last_timer_event == timestamp:
-            return
-
-        self.last_timer_event = timestamp
-
-        data = self.db.query("SELECT e.event_type, e.event_sub_type, e.handler, t.next_run FROM timer_event t "
-                             "JOIN event_config e ON t.event_type = e.event_type AND t.handler = e.handler "
-                             "WHERE t.next_run <= ? AND e.enabled = 1", [timestamp])
-        for row in data:
-            event_type_key = self.get_event_type_key(row.event_type, row.event_sub_type)
-
-            # timer event run times should be consistent, so we base the next run time off the last run time,
-            # instead of the current timestamp
-            next_run = row.next_run + int(row.event_sub_type)
-
-            # prevents timer events from getting too far behind, or having a large "catch-up" after
-            # the bot has been offline for a time
-            if next_run < timestamp:
-                next_run = timestamp + int(row.event_sub_type)
-
-            self.db.exec("UPDATE timer_event SET next_run = ? WHERE event_type = ? AND handler = ?",
-                         [next_run, row.event_type, row.handler])
-
-            self.fire_event(event_type_key)
+        # # timer events will execute not more often than once per second
+        # if self.last_timer_event == timestamp:
+        #     return
+        #
+        # self.last_timer_event = timestamp
+        #
+        # data = self.db.query("SELECT e.event_type, e.event_sub_type, e.handler, t.next_run FROM timer_event t "
+        #                      "JOIN event_config e ON t.event_type = e.event_type AND t.handler = e.handler "
+        #                      "WHERE t.next_run <= ? AND e.enabled = 1", [timestamp])
+        # for row in data:
+        #     event_type_key = self.get_event_type_key(row.event_type, row.event_sub_type)
+        #
+        #     # timer event run times should be consistent, so we base the next run time off the last run time,
+        #     # instead of the current timestamp
+        #     next_run = row.next_run + int(row.event_sub_type)
+        #
+        #     # prevents timer events from getting too far behind, or having a large "catch-up" after
+        #     # the bot has been offline for a time
+        #     if next_run < timestamp:
+        #         next_run = timestamp + int(row.event_sub_type)
+        #
+        #     self.db.exec("UPDATE timer_event SET next_run = ? WHERE event_type = ? AND handler = ?",
+        #                  [next_run, row.event_type, row.handler])
+        #
+        #     self.fire_event(event_type_key)

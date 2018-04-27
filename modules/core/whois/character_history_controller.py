@@ -1,8 +1,7 @@
 from core.decorators import instance, command
 from core.db import DB
-from core.text import Text
-from core.command_param_types import Any, Int
-
+from tools.text import Text
+from tools.command_param_types import Any, Int
 
 @instance()
 class CharacterHistoryController:

@@ -1,8 +1,8 @@
 from core.decorators import instance, command
 from core.db import DB
-from core.text import Text
-from core.command_param_types import Any
-from core.chat_blob import ChatBlob
+from tools.text import Text
+from tools.command_param_types import Any
+from tools.chat_blob import ChatBlob
 
 
 @instance()
@@ -24,7 +24,7 @@ class CharacterInfoController:
         char_id = self.character_manager.resolve_char_to_id(char_name)
         if whois:
             # TODO add extended info
-            msg = "<highlight>%s<end> (%d/<green>%d<end>) %s %s" % (whois.name, whois.level, whois.ai_level, whois.faction, whois.profession)
+            msg = "<highlight>%s<end> (%d/<green>%d<end>) %s %s" % (whois['name'], whois['level'], whois['ai_level'], whois['faction'], whois['profession'])
             reply(msg)
         elif char_id:
             blob = "<notice>Note: Could not retrieve detailed info for character.<end>\n\n"

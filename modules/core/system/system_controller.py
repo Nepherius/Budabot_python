@@ -1,5 +1,5 @@
 from core.decorators import instance, command
-from core.command_param_types import Any
+from tools.command_param_types import Any
 
 
 @instance()
@@ -8,7 +8,7 @@ class SystemController:
         pass
 
     def inject(self, registry):
-        self.bot = registry.get_instance("budabot")
+        self.bot = registry.get_instance("mangopie")
         self.access_manager = registry.get_instance("access_manager")
 
     def start(self):

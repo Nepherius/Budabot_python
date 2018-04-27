@@ -1,6 +1,6 @@
 from core.decorators import instance
-from core.logger import Logger
-from .setting_types import SettingType
+from tools.logger import Logger
+from tools.setting_types import SettingType
 from core.registry import Registry
 from __init__ import get_attrs
 import os
@@ -30,32 +30,29 @@ class SettingManager:
         name = name.lower()
         module = module.lower()
         setting.set_name(name)
+        setting.set_description(description)
 
         if not description:
             self.logger.warning("No description specified for setting '%s'" % name)
 
-        row = self.db.query_single("SELECT name, value, description FROM setting WHERE name = ?",
-                                   [name])
-
+        row = self.db.find('settings', {"name": name})
         if row is None:
             # add new event commands
-            self.db.exec(
-                "INSERT INTO setting (name, value, description, module, verified) VALUES (?, ?, ?, ?, ?)",
-                [name, value, description, module, 1])
+
+            self.db.insert("settings",
+                           {"name": name, "value": value, "description": description, "module": module, "verified": 1})
         else:
             # mark command as verified
-            self.db.exec(
-                "UPDATE setting SET description = ?, verified = ?, module = ? WHERE name = ?",
-                [description, 1, module, name])
 
+            self.db.update('settings', {"name": name}, {"description": description, "verified": 1, "module": module})
         self.settings[name] = setting
 
     def get_value(self, name):
-        row = self.db.query_single("SELECT value FROM setting WHERE name = ?", [name])
-        return row.value if row else None
+        row = self.db.find('settings', {"name": name})
+        return row['value'] if row else None
 
     def set_value(self, name, value):
-        self.db.exec("UPDATE setting SET value = ? WHERE name = ?", [value, name])
+        self.db.update('settings', {"name": name}, {"value": value})
 
     def get(self, name):
         name = name.lower()
