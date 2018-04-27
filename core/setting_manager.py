@@ -30,26 +30,26 @@ class SettingManager:
         name = name.lower()
         module = module.lower()
         setting.set_name(name)
+        setting.set_description(description)
 
         if not description:
             self.logger.warning("No description specified for setting '%s'" % name)
 
-        result = self.db.find('settings', {"name": name})
-
-        if result is None:
+        row = self.db.find('settings', {"name": name})
+        if row is None:
             # add new event commands
+
             self.db.insert("settings",
                            {"name": name, "value": value, "description": description, "module": module, "verified": 1})
         else:
             # mark command as verified
-            self.db.update('settings', {"name": name}, {"description": description, "verified": 1, "module": module})
 
+            self.db.update('settings', {"name": name}, {"description": description, "verified": 1, "module": module})
         self.settings[name] = setting
 
     def get_value(self, name):
-        result = self.db.find('settings', {"name": name})
-
-        return result['value'] if result else None
+        row = self.db.find('settings', {"name": name})
+        return row['value'] if row else None
 
     def set_value(self, name, value):
         self.db.update('settings', {"name": name}, {"value": value})

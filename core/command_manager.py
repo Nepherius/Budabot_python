@@ -28,6 +28,7 @@ class CommandManager:
         self.bot: Mangopie = registry.get_instance("mangopie")
         self.character_manager: CharacterManager = registry.get_instance("character_manager")
         self.setting_manager: SettingManager = registry.get_instance("setting_manager")
+        self.command_alias_manager = registry.get_instance("command_alias_manager")
 
     def pre_start(self):
         self.bot.add_packet_handler(server_packets.PrivateMessage.id, self.handle_private_message)
@@ -65,11 +66,11 @@ class CommandManager:
             return
 
         for channel, label in self.channels.items():
-            row = self.db.find('commands', {"command": command, "sub_command": sub_command, 'channel': channel})
+            row = self.db.find('command_config', {"command": command, "sub_command": sub_command, 'channel': channel})
 
             if row is None:
                 # add new command commands
-                self.db.insert('commands',
+                self.db.insert('command_config',
                                {'command': command, 'sub_command': sub_command, 'access_level': access_level,
                                 'channel': channel, 'module': module, 'verified': 1, 'enabled': 1})
 
@@ -79,7 +80,7 @@ class CommandManager:
                         command, sub_command))
             else:
                 # mark command as verified
-                self.db.update('commands',
+                self.db.update('command_config',
                                {'module': module, 'command': command, 'channel': channel, 'access_level': access_level,
                                 'sub_command': sub_command},
                                {'verified': 1})
@@ -129,8 +130,7 @@ class CommandManager:
             command_str, command_args = self.get_command_parts(message)
 
             # check for command alias
-            # command_str, command_args = self.command_alias_manager.check_for_alias(command_str, command_args)
-
+            command_str, command_args = self.command_alias_manager.check_for_alias(command_str, command_args)
             cmd_configs = self.get_command_configs(command_str, channel, 1)
             if cmd_configs:
                 # given a list of cmd_configs that are enabled, see if one has regex that matches incoming command_str
@@ -156,7 +156,7 @@ class CommandManager:
             reply("There was an error processing your request.")
 
     def get_help_text(self, char, command_str, channel):
-        data = self.db.find_all('commands', {'command': command_str, 'channel': channel, 'enabled': 1})
+        data = self.db.find_all('command_config', {'command': command_str, 'channel': channel, 'enabled': 1})
         # filter out commands that character does not have access level for
         data = filter(lambda row: self.access_manager.check_access(char, row['access_level']), data)
 
@@ -192,6 +192,13 @@ class CommandManager:
         else:
             return command
 
+    def get_command_key_parts(self, command_str):
+        parts = command_str.split(":", 1)
+        if len(parts) == 2:
+            return parts[0], parts[1]
+        else:
+            return parts[0], ""
+
     def get_matches(self, cmd_configs, command_args):
         for row in cmd_configs:
             command_key = self.get_command_key(row['command'], row['sub_command'])
@@ -217,7 +224,10 @@ class CommandManager:
             query['enabled'] = enabled
         if sub_command:
             query['sub_command'] = sub_command
-        return self.db.find_all('commands', query)
+        return self.db.find_all('command_config', query)
+
+    def get_handlers(self, command_key):
+        return self.handlers.get(command_key, None)
 
     def register_command_channel(self, label, value):
         if value in self.channels:

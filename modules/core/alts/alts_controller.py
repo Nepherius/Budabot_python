@@ -25,8 +25,8 @@ class AltsController:
         for alt in alts:
             count += 1
             blob += "<highlight>%s<end> (%s/<green>%s<end>) %s %s\n" % (
-            alt['char'][0]['name'], alt['char'][0]['level'], alt['char'][0]['ai_level'], alt['char'][0]['faction'],
-            alt['char'][0]['profession'])
+                alt['char'][0]['name'], alt['char'][0]['level'], alt['char'][0]['ai_level'], alt['char'][0]['faction'],
+                alt['char'][0]['profession'])
 
         reply(ChatBlob("Alts for %s (%d)" % (sender.name, count), blob))
 
@@ -66,9 +66,12 @@ class AltsController:
             return
 
         alts = self.alts_manager.get_alts(char_id)
+        count = 0
         blob = ""
         for alt in alts:
+            count += 1
             blob += "<highlight>%s<end> (%d/<green>%d<end>) %s %s\n" % (
-            alt.name, alt.level, alt.ai_level, alt.faction, alt.profession)
+                alt['char'][0]['name'], alt['char'][0]['level'], alt['char'][0]['ai_level'], alt['char'][0]['faction'],
+                alt['char'][0]['profession'])
 
-        reply(ChatBlob("Alts for %s (%d)" % (name, len(alts)), blob))
+        reply(ChatBlob("Alts for %s (%d)" % (name, count), blob))

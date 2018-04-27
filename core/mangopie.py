@@ -44,7 +44,7 @@ class Mangopie(Bot):
         # prepare indexes, commands, events, and settings
         self.db.client['admin'].create_index("char_id", unique=True)
         self.db.client['player'].create_index("char_id", unique=True)
-        self.db.client['commands'].update_many({}, {'$set': {'verified': 0}})
+        self.db.client['command_config'].update_many({}, {'$set': {'verified': 0}})
         self.db.client['event_config'].update_many({}, {'$set': {'verified': 0}})
         self.db.client['settings'].update_many({}, {'$set': {'verified': 0}})
 
@@ -53,7 +53,7 @@ class Mangopie(Bot):
 
         # remove commands, events, and settings that are no longer registered
         self.db.delete_all('settings', {'verified': 0})
-        self.db.delete_all('commands', {'verified': 0})
+        self.db.delete_all('command_config', {'verified': 0})
         self.db.delete_all('event_config', {'verified': 0})
         # self.db.exec(
         #     "DELETE FROM timer_event WHERE handler NOT IN (SELECT handler FROM event_config WHERE event_type = ?)",

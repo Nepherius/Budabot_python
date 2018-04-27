@@ -20,7 +20,7 @@ class HelpController:
     @command(command="help", params=[], access_level="all",
              description="Show a list of commands to get help with")
     def help_list_cmd(self, channel, sender, reply, args):
-        data = self.db.find_all('commands', {})
+        data = self.db.client['command_config'].find().sort([('module', 1), ('command', 1)])
         blob = ""
         current_group = ""
         current_module = ""

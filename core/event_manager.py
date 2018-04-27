@@ -47,7 +47,7 @@ class EventManager:
     def register(self, handler, event_type, description, module):
         event_base_type, event_sub_type = self.get_event_type_parts(event_type)
         module = module.lower()
-        handler_name = self.util.get_handler_name(handler)
+        handler_name = self.util.get_handler_name(handler).lower()
 
         if event_base_type not in self.event_types:
             self.logger.error("Could not register handler '%s' for event type '%s': event type does not exist" % (
@@ -114,7 +114,7 @@ class EventManager:
             'enabled': 1
         })
         for row in data:
-            handler = self.handlers.get(row.handler, None)
+            handler = self.handlers.get(row['handler'], None)
             if not handler:
                 self.logger.error(
                     "Could not find handler callback for event type '%s' and handler '%s'" % (event_type, row.handler))
