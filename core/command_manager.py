@@ -132,6 +132,7 @@ class CommandManager:
             # check for command alias
             command_str, command_args = self.command_alias_manager.check_for_alias(command_str, command_args)
             cmd_configs = self.get_command_configs(command_str, channel, 1)
+            cmd_configs = list(cmd_configs)
             if cmd_configs:
                 # given a list of cmd_configs that are enabled, see if one has regex that matches incoming command_str
                 cmd_config, matches, handler = self.get_matches(cmd_configs, command_args)

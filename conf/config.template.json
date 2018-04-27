@@ -1,13 +1,9 @@
 {
-  "username": "",
-  "password": "",
-  "character": "",
-  "superadmin": "",
-  "database": {
-    "name": "budabot.db"
-  },
-  "server": {
-    "host": "chat.d1.funcom.com",
-    "port": 7105
-  }
+    "username": "",
+    "password": "",
+    "character": "",
+    "superadmin": "",
+    "dimension": "1",
+    "db_name": "mangopie",
+    "db_host": "localhost:27017/"
 }
