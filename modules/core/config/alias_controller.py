@@ -21,7 +21,6 @@ class AliasController:
         data = self.command_alias_manager.get_enabled_aliases()
         count = 0
         for row in data:
-            print(row)
             count += 1
             blob += row['alias'] + " - " + row['command'] + "\n"
 

@@ -3,3 +3,4 @@ __pycache__
 /.idea
 /conf/config.json
 /modules/custom
+/modules/addons

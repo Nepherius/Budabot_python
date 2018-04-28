@@ -39,7 +39,8 @@ class BuddyManager:
     def handle_remove(self, packet):
         if packet.character_id in self.buddy_list:
             if len(self.buddy_list[packet.character_id]["types"]) > 0:
-                self.logger.warning("Removing buddy %d that still has types %s" % (packet.character_id, self.buddy_list[packet.character_id]["types"]))
+                self.logger.warning("Removing buddy %d that still has types %s" % (
+                packet.character_id, self.buddy_list[packet.character_id]["types"]))
             del self.buddy_list[packet.character_id]
 
     def handle_login_ok(self):

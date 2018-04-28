@@ -31,6 +31,7 @@ class HelpController:
             parts = row['module'].split(".")
             group = parts[0]
             module = parts[1]
+
             if group != current_group:
                 current_group = group
                 blob += "\n\n<header2>" + current_group + "<end>"
@@ -42,6 +43,7 @@ class HelpController:
             if row['command'] != current_command:
                 current_command = row['command']
                 blob += " " + self.text.make_chatcmd(row['command'], "/tell <myname> help " + row['command'])
+
         reply(ChatBlob("Help (main)", blob))
 
     @command(command="help", params=[Any("command")], access_level="all",

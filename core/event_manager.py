@@ -83,20 +83,20 @@ class EventManager:
             self.db.update('event_config', {
                 'event_type': event_base_type,
                 'handler': handler_name
-            },{
-                'verified': 1,
-                'module': module,
-                'description': description,
-                'event_sub_type': event_sub_type,
-            })
+            }, {
+                               'verified': 1,
+                               'module': module,
+                               'description': description,
+                               'event_sub_type': event_sub_type,
+                           })
 
             if event_base_type == "timer":
                 self.db.update('timer_event', {
                     'event_type': event_base_type,
                     'handler': handler_name
                 }, {
-                    'event_sub_type': event_sub_type
-                })
+                                   'event_sub_type': event_sub_type
+                               })
 
         # load command handler
         self.handlers[handler_name] = handler

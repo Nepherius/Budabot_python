@@ -25,7 +25,7 @@ class ConfigController:
     @command(command="config", params=[], access_level="superadmin",
              description="Shows configuration options for the bot")
     def config_list_cmd(self, channel, sender, reply, args):
-        cmd_config = self.db.client['command_config'].aggregate([
+        pipeline = [
             {
                 '$project': {
                     'module': 1,
@@ -44,47 +44,10 @@ class ConfigController:
             }, {
                 '$sort': {'_id': 1}
             }
-        ])
-        event_config = self.db.client['event_config'].aggregate([
-            {
-                '$project': {
-                    'module': 1,
-                    'count_enabled': {
-                        '$cond': {'if': {'$eq': ['$enabled', 1]}, 'then': 1, 'else': 0}
-                    },
-                    'count_disabled': {
-                        '$cond': {'if': {'$eq': ['$enabled', 0]}, 'then': 1, 'else': 0}
-                    }
-                }
-            }, {
-                '$group': {
-                    '_id': '$module', 'count_enabled': {'$sum': '$count_enabled'},
-                    'count_disabled': {'$sum': '$count_disabled'}
-                }
-            }, {
-                '$sort': {'_id': 1}
-            }
-        ])
-        settings = self.db.client['settings'].aggregate([
-            {
-                '$project': {
-                    'module': 1,
-                    'count_enabled': {
-                        '$cond': {'if': {'$eq': ['$enabled', 1]}, 'then': 1, 'else': 0}
-                    },
-                    'count_disabled': {
-                        '$cond': {'if': {'$eq': ['$enabled', 0]}, 'then': 1, 'else': 0}
-                    }
-                }
-            }, {
-                '$group': {
-                    '_id': '$module', 'count_enabled': {'$sum': '$count_enabled'},
-                    'count_disabled': {'$sum': '$count_disabled'}
-                }
-            }, {
-                '$sort': {'_id': 1}
-            }
-        ])
+        ]
+        cmd_config = self.db.client['command_config'].aggregate(pipeline)
+        event_config = self.db.client['event_config'].aggregate(pipeline)
+        settings = self.db.client['settings'].aggregate(pipeline)
 
         final_list = []
         lists = [cmd_config, event_config, settings]
@@ -146,7 +109,6 @@ class ConfigController:
         if data:
             blob += "\n<header2>Commands<end>\n"
             for row in data:
-                print(data)
                 command_key = self.command_manager.get_command_key(row['command'], row['sub_command'])
                 blob += self.text.make_chatcmd(command_key, "/tell <myname> config cmd " + command_key) + "\n"
 

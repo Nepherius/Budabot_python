@@ -26,7 +26,6 @@ class AdminController:
         blob = ""
         current_access_level = ""
         for row in admins:
-
             if row['access_level'] != current_access_level:
                 blob += "\n<header2>%s<end>\n" % row['access_level'].capitalize()
                 current_access_level = row['access_level']
@@ -64,7 +63,8 @@ class AdminController:
             return
 
         if self.admin_manager.remove(char_id):
-            reply("Character <highlight>%s<end> removed as <highlight>%s<end> successfully." % (name, AdminManager.ADMIN))
+            reply(
+                "Character <highlight>%s<end> removed as <highlight>%s<end> successfully." % (name, AdminManager.ADMIN))
         else:
             reply("Could not remove character <highlight>%s<end> as <highlight>%s<end>." % (name, AdminManager.ADMIN))
 
@@ -79,7 +79,8 @@ class AdminController:
             return
 
         if self.admin_manager.add(char_id, AdminManager.MODERATOR):
-            reply("Character <highlight>%s<end> added as <highlight>%s<end> successfully." % (name, AdminManager.MODERATOR))
+            reply("Character <highlight>%s<end> added as <highlight>%s<end> successfully." % (
+            name, AdminManager.MODERATOR))
         else:
             reply("Could not add character <highlight>%s<end> as <highlight>%s<end>." % (name, AdminManager.MODERATOR))
 
@@ -94,6 +95,8 @@ class AdminController:
             return
 
         if self.admin_manager.remove(char_id):
-            reply("Character <highlight>%s<end> removed as <highlight>%s<end> successfully." % (name, AdminManager.MODERATOR))
+            reply("Character <highlight>%s<end> removed as <highlight>%s<end> successfully." % (
+            name, AdminManager.MODERATOR))
         else:
-            reply("Could not remove character <highlight>%s<end> as <highlight>%s<end>." % (name, AdminManager.MODERATOR))
+            reply(
+                "Could not remove character <highlight>%s<end> as <highlight>%s<end>." % (name, AdminManager.MODERATOR))

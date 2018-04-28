@@ -82,30 +82,31 @@ class MemberController:
         else:
             reply("You must be a member of this bot to set your auto invite preference.")
 
-    @event(event_type=BuddyManager.BUDDY_LOGON_EVENT, description="Auto invite members to the private channel when they logon")
+    @event(event_type=BuddyManager.BUDDY_LOGON_EVENT,
+           description="Auto invite members to the private channel when they logon")
     def handle_buddy_logon(self, event_type, event_data):
         member = self.get_member(event_data.character_id)
         if member and member['auto_invite'] == 1:
             self.bot.send_private_message(member['char_id'], "You have been auto-invited to the private channel.")
             self.private_channel_manager.invite(member['char_id'])
 
-    def add_member(self, char_id, auto_invite=1):
+    def add_member(self, char_id, auto_invite=0):
         self.buddy_manager.add_buddy(char_id, self.MEMBER_BUDDY_TYPE)
         if not self.get_member(char_id):
             self.db.insert('members', {'char_id': char_id, 'auto_invite': auto_invite})
 
     def remove_member(self, char_id):
         self.buddy_manager.remove_buddy(char_id, self.MEMBER_BUDDY_TYPE)
-        self.db.delete('members',{'char_id':char_id})
+        self.db.delete('members', {'char_id': char_id})
 
     def update_auto_invite(self, char_id, auto_invite):
-         self.db.update('members', {'char_id':char_id}, { 'auto_invite':auto_invite})
+        self.db.update('members', {'char_id': char_id}, {'auto_invite': auto_invite})
 
     def get_member(self, char_id):
-        return self.db.find('members', {'char_id' : char_id})
+        return self.db.find('members', {'char_id': char_id})
 
     def get_all_members(self):
-        return self.db.find_all('members',{})
+        return self.db.find_all('members', {})
 
     def check_member(self, char_id):
         return self.get_member(char_id) is not None

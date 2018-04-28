@@ -25,7 +25,7 @@ class AccessManager:
         char_id = self.character_manager.resolve_char_to_id(char)
 
         for access_level in self.access_levels:
-             if access_level["handler"](char_id):
+            if access_level["handler"](char_id):
                 return access_level
 
     def get_access_level_by_level(self, level):

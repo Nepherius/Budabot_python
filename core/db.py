@@ -5,6 +5,7 @@ from pymongo import monitoring
 from tools.logger import Logger
 import json
 
+
 @instance()
 class DB:
     def __init__(self):
@@ -25,11 +26,11 @@ class DB:
             self.logger.warning('Duplicate error')
             return False
 
-    def update(self, table, target, newVal):
-        return self.client[table].update_one(target, {"$set": newVal})
+    def update(self, table, target, update):
+        return self.client[table].update_one(target, {"$set": update})
 
-    def update_all(self, table, target, newVal):
-        return self.client[table].update_many(target, {"$set": newVal})
+    def update_all(self, table, target, update):
+        return self.client[table].update_many(target, {"$set": update})
 
     def find(self, table, query):
         return self.client[table].find_one(query)
@@ -44,23 +45,4 @@ class DB:
         return self.client[table].delete_many(query)
 
 
-class CommandLogger(monitoring.CommandListener):
-    def __init__(self):
-        self.logger = Logger("MongoDb")
 
-    def started(self, event):
-        self.logger.debug("Command {0.command_name} with request id "
-                          "{0.request_id} started on server "
-                          "{0.connection_id}".format(event))
-
-    def succeeded(self, event):
-        self.logger.debug("Command {0.command_name} with request id "
-                          "{0.request_id} on server {0.connection_id} "
-                          "succeeded in {0.duration_micros} "
-                          "microseconds".format(event))
-
-    def failed(self, event):
-        self.logger.debug("Command {0.command_name} with request id "
-                          "{0.request_id} on server {0.connection_id} "
-                          "failed in {0.duration_micros} "
-                          "microseconds".format(event))

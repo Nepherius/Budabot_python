@@ -55,9 +55,6 @@ class Mangopie(Bot):
         self.db.delete_all('settings', {'verified': 0})
         self.db.delete_all('command_config', {'verified': 0})
         self.db.delete_all('event_config', {'verified': 0})
-        # self.db.exec(
-        #     "DELETE FROM timer_event WHERE handler NOT IN (SELECT handler FROM event_config WHERE event_type = ?)",
-        #     ["timer"])
         self.status = BotStatus.RUN
 
     def post_start(self):

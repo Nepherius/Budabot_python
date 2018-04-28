@@ -40,11 +40,17 @@ class SettingManager:
             # add new event commands
 
             self.db.insert("settings",
-                           {"name": name, "value": value, "description": description, "module": module, "verified": 1})
+                           {
+                               "name": name,
+                               "value": value,
+                               "description": description,
+                               "module": module,
+                               "verified": 1
+                           })
         else:
             # mark command as verified
-
             self.db.update('settings', {"name": name}, {"description": description, "verified": 1, "module": module})
+
         self.settings[name] = setting
 
     def get_value(self, name):
