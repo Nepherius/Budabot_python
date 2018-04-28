@@ -36,8 +36,9 @@ class SettingManager:
             self.logger.warning("No description specified for setting '%s'" % name)
 
         row = self.db.find('settings', {"name": name})
+
         if row is None:
-            # add new event commands
+            self.logger.debug("Adding setting '%s'" % name)
 
             self.db.insert("settings",
                            {
@@ -47,8 +48,10 @@ class SettingManager:
                                "module": module,
                                "verified": 1
                            })
+            # verify default value is a valid value, and is formatted appropriately
+            setting.set_value(value)
         else:
-            # mark command as verified
+            self.logger.debug("Updating setting '%s'" % name)
             self.db.update('settings', {"name": name}, {"description": description, "verified": 1, "module": module})
 
         self.settings[name] = setting

@@ -1,3 +1,6 @@
+from core.aochat.delay_queue import DelayQueue
+from core.aochat import server_packets, client_packets
+from core.decorators import instance
 from core.aochat.bot import Bot
 from core.buddy_manager import BuddyManager
 from core.character_manager import CharacterManager
@@ -5,9 +8,7 @@ from core.access_manager import AccessManager
 from core.setting_manager import SettingManager
 from core.public_channel_manager import PublicChannelManager
 from tools.text import Text
-from core.decorators import instance
 from tools.chat_blob import ChatBlob
-from core.aochat import server_packets, client_packets
 from tools.setting_types import TextSettingType, ColorSettingType, NumberSettingType
 from tools.bot_status import BotStatus
 import os
@@ -24,6 +25,7 @@ class Mangopie(Bot):
         self.superadmin = None
         self.status: BotStatus = BotStatus.SHUTDOWN
         self.dimension = None
+        self.packet_queue = DelayQueue(2, 2.5)
 
     def inject(self, registry):
         self.db = registry.get_instance("db")
@@ -132,9 +134,13 @@ class Mangopie(Bot):
 
             self.event_manager.fire_event("packet:" + str(packet.id), packet)
 
-            return packet
-        else:
-            return None
+        # check packet queue for outgoing packets
+        outgoing_packet = self.packet_queue.dequeue()
+        while outgoing_packet:
+            self.send_packet(outgoing_packet)
+            outgoing_packet = self.packet_queue.dequeue()
+
+        return packet
 
     def send_org_message(self, msg):
         org_channel_id = self.public_channel_manager.org_channel_id
@@ -143,18 +149,19 @@ class Mangopie(Bot):
         else:
             for page in self.get_text_pages(msg, self.setting_manager.get("org_channel_max_page_length").get_value()):
                 packet = client_packets.PublicChannelMessage(org_channel_id, page, "")
-                self.send_packet(packet)
+                # self.send_packet(packet)
+                self.packet_queue.enqueue(packet)
 
     def send_private_message(self, char, msg):
         char_id = self.character_manager.resolve_char_to_id(char)
         if char_id is None:
             self.logger.warning("Could not send message to %s, could not find char id" % char)
         else:
-            for page in self.get_text_pages(msg,
-                                            self.setting_manager.get("private_message_max_page_length").get_value()):
+            for page in self.get_text_pages(msg, self.setting_manager.get("private_message_max_page_length").get_value()):
                 self.logger.log_tell("To", self.character_manager.get_char_name(char_id), page)
                 packet = client_packets.PrivateMessage(char_id, page, "\0")
-                self.send_packet(packet)
+                # self.send_packet(packet)
+                self.packet_queue.enqueue(packet)
 
     def send_private_channel_message(self, msg, private_channel=None):
         if private_channel is None:

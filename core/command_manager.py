@@ -153,7 +153,7 @@ class CommandManager:
             else:
                 reply("Error! Unknown command.")
         except Exception as e:
-            self.logger.error("", e)
+            self.logger.error("error processing command: %s" % command_str, e)
             reply("There was an error processing your request.")
 
     def get_help_text(self, char, command_str, channel):

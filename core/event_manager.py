@@ -120,7 +120,10 @@ class EventManager:
                     "Could not find handler callback for event type '%s' and handler '%s'" % (event_type, row.handler))
                 return
 
-            handler(event_type, event_data)
+            try:
+                handler(event_type, event_data)
+            except Exception as e:
+                self.logger.error("error processing event '%s'" % event_type, e)
 
     def get_event_type_parts(self, event_type):
         parts = event_type.lower().split(":", 1)

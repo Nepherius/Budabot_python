@@ -43,7 +43,7 @@ class BuddyManager:
                 packet.character_id, self.buddy_list[packet.character_id]["types"]))
             del self.buddy_list[packet.character_id]
 
-    def handle_login_ok(self):
+    def handle_login_ok(self, packet):
         self.buddy_list_size += 1000
 
     def add_buddy(self, char, _type):
