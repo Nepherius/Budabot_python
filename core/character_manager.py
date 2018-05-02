@@ -30,6 +30,8 @@ class CharacterManager:
     def resolve_char_to_id(self, char):
         if isinstance(char, int):
             return char
+        elif char.isdigit():
+            return int(char)
         else:
             return self.get_char_id(char)
 

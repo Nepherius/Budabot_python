@@ -1,3 +1,4 @@
+from core.aochat import server_packets
 from core.decorators import instance
 from tools.map_object import MapObject
 from __init__ import none_to_empty_string
@@ -14,6 +15,10 @@ class PorkManager:
         self.bot = registry.get_instance("mangopie")
         self.db = registry.get_instance("db")
         self.character_manager = registry.get_instance("character_manager")
+
+    def pre_start(self):
+        self.bot.add_packet_handler(server_packets.CharacterLookup.id, self.update)
+        self.bot.add_packet_handler(server_packets.CharacterName.id, self.update)
 
     def start(self):
         pass
@@ -131,3 +136,19 @@ class PorkManager:
     def get_from_database(self, char):
         char_id = self.character_manager.resolve_char_to_id(char)
         return self.db.find('player', {'char_id' : char_id})
+
+
+
+    def update(self, packet):
+        character = self.get_from_database(packet.character_id)
+
+        if character:
+            if character['name'] != packet.name:
+                self.db.update('player', {'char_id': packet.character_id}, {'name': packet.name})
+        else:
+            self.db.insert('player', {
+                'char_id': packet.character_id,
+                'name': packet.name,
+                'source': 'chat_server',
+                'last_updated': int(time.time())
+            })

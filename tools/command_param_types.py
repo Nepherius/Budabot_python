@@ -23,6 +23,27 @@ class Int:
         return "<highlight>'%s'<end>" % self.name
 
 
+class IntOptional:
+    def __init__(self, name):
+        self.name = name
+
+    def get_regex(self):
+        return "([0-9]+)"
+
+    def get_name(self):
+        return "<highlight>%s<end>" % self.name
+
+
+class Item:
+    def __init__(self, name):
+        self.name = name
+
+    def get_regex(self):
+        return "<a href=\"itemref:\/\/(\d+)\/(\d+)\/(\d+)\">(.+)<\/a>"
+
+    def get_name(self):
+        return self.name
+
 class Any:
     def __init__(self, name):
         self.name = name

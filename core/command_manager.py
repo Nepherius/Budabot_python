@@ -20,6 +20,17 @@ class CommandManager:
         self.handlers = collections.defaultdict(list)
         self.logger = Logger("command_manager")
         self.channels = {}
+        self.ignore_regexes = [
+            re.compile(" is AFK \(Away from keyboard\) since ", re.IGNORECASE),
+            re.compile("I am away from my keyboard right now", re.IGNORECASE),
+            re.compile("Unknown command or access denied!", re.IGNORECASE),
+            re.compile("I am responding", re.IGNORECASE),
+            re.compile("I only listen", re.IGNORECASE),
+            re.compile("Error!", re.IGNORECASE),
+            re.compile("Unknown command input", re.IGNORECASE),
+            re.compile("/tell", re.IGNORECASE),
+            re.compile("You have been auto invited", re.IGNORECASE),
+        ]
 
     def inject(self, registry):
         self.db = registry.get_instance("db")
@@ -96,6 +107,10 @@ class CommandManager:
         # otherwise it is ignored
         if len(packet.message) < 1 or not self.bot.is_ready():
             return
+
+        for regex in self.ignore_regexes:
+            if regex.search(packet.message):
+                return
 
         if packet.message[:1] == '!':
             command_str = packet.message[1:]

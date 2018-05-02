@@ -157,7 +157,8 @@ class Mangopie(Bot):
         if char_id is None:
             self.logger.warning("Could not send message to %s, could not find char id" % char)
         else:
-            for page in self.get_text_pages(msg, self.setting_manager.get("private_message_max_page_length").get_value()):
+            for page in self.get_text_pages(msg,
+                                            self.setting_manager.get("private_message_max_page_length").get_value()):
                 self.logger.log_tell("To", self.character_manager.get_char_name(char_id), page)
                 packet = client_packets.PrivateMessage(char_id, page, "\0")
                 # self.send_packet(packet)
@@ -200,3 +201,5 @@ class Mangopie(Bot):
 
     def restart(self):
         self.status = BotStatus.RESTART
+
+
