@@ -11,7 +11,7 @@ from tools.text import Text
 from tools.chat_blob import ChatBlob
 from tools.setting_types import TextSettingType, ColorSettingType, NumberSettingType
 from tools.bot_status import BotStatus
-import os
+import time
 
 
 @instance()
@@ -26,6 +26,7 @@ class Mangopie(Bot):
         self.status: BotStatus = BotStatus.SHUTDOWN
         self.dimension = None
         self.packet_queue = DelayQueue(2, 2.5)
+        self.last_timer_event = 0
 
     def inject(self, registry):
         self.db = registry.get_instance("db")
@@ -38,6 +39,7 @@ class Mangopie(Bot):
         self.text: Text = registry.get_instance("text")
         self.pork_manager = registry.get_instance("pork_manager")
         self.event_manager = registry.get_instance("event_manager")
+        self.job_scheduler = registry.get_instance("job_scheduler")
 
     def init(self, config, registry):
         self.superadmin = config["superadmin"].capitalize()
@@ -107,6 +109,14 @@ class Mangopie(Bot):
         self.event_manager.fire_event("connect", None)
         self.post_start()
         while self.status == BotStatus.RUN:
+            timestamp = int(time.time())
+
+            # timer events will execute not more often than once per second
+            if self.last_timer_event < timestamp:
+                self.last_timer_event = timestamp
+                self.job_scheduler.check_for_scheduled_jobs(timestamp)
+                self.event_manager.check_for_timer_events(timestamp)
+
             self.iterate()
 
         return self.status
@@ -117,7 +127,6 @@ class Mangopie(Bot):
         self.packet_handlers[packet_id] = handlers
 
     def iterate(self):
-        self.event_manager.check_for_timer_events()
         packet = self.read_packet()
         if packet is not None:
             if isinstance(packet, server_packets.PrivateMessage):

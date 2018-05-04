@@ -216,14 +216,27 @@ class CommandManager:
             return parts[0], ""
 
     def get_matches(self, cmd_configs, command_args):
+        if command_args:
+            command_args = " " + command_args
+
+
         for row in cmd_configs:
             command_key = self.get_command_key(row['command'], row['sub_command'])
             handlers = self.handlers[command_key]
             for handler in handlers:
                 matches = handler["regex"].match(command_args)
                 if matches:
-                    return row, matches, handler
+                    return row, self.format_matches(command_args, matches), handler
         return None, None, None
+
+
+    def format_matches(self, command_args, matches):
+        # convert matches to list
+        m = list(matches.groups())
+        m.insert(0, command_args)
+
+        # strip leading spaces for each group, if they group exists
+        return list(map(lambda x: x[1:] if x else x, m))
 
     def get_command_parts(self, message):
         parts = message.split(" ", 1)
@@ -259,4 +272,4 @@ class CommandManager:
     def get_regex_from_params(self, params):
         # params must be wrapped with line-beginning and line-ending anchors in order to match
         # when no params are specified (eg. "^$")
-        return "^" + " ".join(map(lambda x: x.get_regex(), params)) + "$"
+        return "^" + "".join(map(lambda x: x.get_regex(), params)) + "$"

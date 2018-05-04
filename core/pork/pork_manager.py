@@ -1,5 +1,6 @@
 from core.aochat import server_packets
 from core.decorators import instance
+from tools.logger import Logger
 from tools.map_object import MapObject
 from __init__ import none_to_empty_string
 import requests
@@ -9,7 +10,7 @@ import time
 @instance()
 class PorkManager:
     def __init__(self):
-        pass
+        self.logger = Logger("pork_manager")
 
     def inject(self, registry):
         self.bot = registry.get_instance("mangopie")
@@ -35,7 +36,11 @@ class PorkManager:
             self.bot.dimension, char_name)
 
         r = requests.get(url)
-        json = r.json()
+        try:
+            json = r.json()
+        except ValueError as e:
+            self.logger.warning("Error marshalling value as json: %s" % r.text, e)
+            json = None
         if json:
             char_info_json = json[0]
             org_info_json = json[1] if json[1] else {}
@@ -135,13 +140,10 @@ class PorkManager:
 
     def get_from_database(self, char):
         char_id = self.character_manager.resolve_char_to_id(char)
-        return self.db.find('player', {'char_id' : char_id})
-
-
+        return self.db.find('player', {'char_id': char_id})
 
     def update(self, packet):
         character = self.get_from_database(packet.character_id)
-
         if character:
             if character['name'] != packet.name:
                 self.db.update('player', {'char_id': packet.character_id}, {'name': packet.name})
