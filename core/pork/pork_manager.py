@@ -143,13 +143,13 @@ class PorkManager:
         return self.db.find('player', {'char_id': char_id})
 
     def update(self, packet):
-        character = self.get_from_database(packet.character_id)
+        character = self.get_from_database(packet.char_id)
         if character:
             if character['name'] != packet.name:
-                self.db.update('player', {'char_id': packet.character_id}, {'name': packet.name})
+                self.db.update('player', {'char_id': packet.char_id}, {'name': packet.name})
         else:
             self.db.insert('player', {
-                'char_id': packet.character_id,
+                'char_id': packet.char_id,
                 'name': packet.name,
                 'source': 'chat_server',
                 'last_updated': int(time.time())

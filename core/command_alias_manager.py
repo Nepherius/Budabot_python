@@ -28,7 +28,7 @@ class CommandAliasManager:
             if row['enabled']:
                 return False
             else:
-                self.db.update('command_alias', {'alias': alias}, {'command': command})
+                self.db.update('command_alias', {'alias': alias}, {'command': command, 'enabled': 1})
                 return True
         else:
             self.db.insert('command_alias', {'alias': alias, 'command': command, 'enabled': 1})
