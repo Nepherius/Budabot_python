@@ -10,6 +10,7 @@ class Logger:
     file_logger = logging.handlers.RotatingFileHandler("./logs/bot.log", maxBytes=5*1024*1024*1024, backupCount=1000)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
     console_logger.setFormatter(formatter)
+    file_logger.setFormatter(formatter)
 
     def __init__(self, name):
         self.logger = logging.getLogger(name)
@@ -36,7 +37,7 @@ class Logger:
         self.info("%s %s: %s" % (direction.capitalize(), sender, self.format_chat_message(msg)))
 
     def format_chat_message(self, msg):
-        msg = re.sub("<a\s+href=\".+\">", "[link]", msg, 0, re.UNICODE | re.DOTALL)
+        msg = re.sub("<a\s+href=\".+?\">", "[link]", msg, 0, re.UNICODE | re.DOTALL)
         msg = re.sub("<font\s+.+?>", "", msg, 0, re.UNICODE)
         msg = re.sub("</font>", "", msg, 0, re.UNICODE)
         msg = re.sub("</a>", "[/link]", msg, 0, re.UNICODE)
