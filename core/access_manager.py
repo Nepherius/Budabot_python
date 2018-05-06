@@ -12,6 +12,7 @@ class AccessManager:
 
     def inject(self, registry):
         self.character_manager = registry.get_instance("character_manager")
+        self.alts_manager = registry.get_instance("alts_manager")
 
     def register_access_level(self, label, level, handler):
         self.logger.debug("Registering access level %d with label '%s'" % (level, label))
@@ -23,7 +24,26 @@ class AccessManager:
 
     def get_access_level(self, char):
         char_id = self.character_manager.resolve_char_to_id(char)
+        if not char_id:
+            return None
 
+        access_level1 = self.get_single_access_level(char_id)
+        alts = list(self.alts_manager.get_alts(char_id))
+        if not alts:
+            return access_level1
+
+        main = alts[0]['char'][0]
+        if main['char_id'] == char_id:
+            return access_level1
+        else:
+            access_level2 = self.get_single_access_level(main['char_id'])
+            if access_level1["level"] < access_level2["level"]:
+                return access_level1
+            else:
+                return access_level2
+
+    def get_single_access_level(self, char):
+        char_id = self.character_manager.resolve_char_to_id(char)
         for access_level in self.access_levels:
             if access_level["handler"](char_id):
                 return access_level
@@ -31,7 +51,7 @@ class AccessManager:
     def get_access_level_by_level(self, level):
         for access_level in self.access_levels:
             if access_level["level"] == level:
-                return access_level["label"]
+                return access_level
         return None
 
     def get_access_level_by_label(self, label):

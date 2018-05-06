@@ -23,7 +23,7 @@ class AltsManager:
         return self.db.client['alts'].aggregate([
             {
                 '$match': {
-                    'group_id': self.get_group_id(char_id)
+                    'group_id': self.get_group_id(char_id),
                 }
             },
             {'$lookup':
@@ -32,7 +32,9 @@ class AltsManager:
                   'foreignField': 'char_id',
                   'as': 'char'
                   }
-             }
+             }, {
+                '$sort': {'status': -1, 'char.level': -1}
+            }
         ])
 
     def add_alt(self, sender_char_id, alt_char_id):
@@ -80,8 +82,8 @@ class AltsManager:
         return self.db.find('alts', {'char_id': char_id})
 
     def get_group_id(self, char_id):
-        row = self.db.find('alts', {'char_id': char_id})
-        return row['group_id']
+        row = self.db.find('alts', {'char_id': char_id, 'status': {'$gte': self.VALIDATED}})
+        return row['group_id'] if row else None
 
     def get_next_group_id(self):
         row = list(self.db.client['alts'].find().sort('group_id', -1).limit(1))

@@ -1,7 +1,7 @@
 from core.decorators import instance, command
 from tools.command_param_types import Any, Const, Options
 from tools.chat_blob import ChatBlob
-from tools.map_object import MapObject
+from core.alts_manager import AltsManager
 
 
 @instance()
@@ -22,13 +22,22 @@ class AltsController:
         count = 0
         alts = self.alts_manager.get_alts(sender.char_id)
         blob = ""
+
         for alt in alts:
             count += 1
-            blob += "<highlight>%s<end> (%s/<green>%s<end>) %s %s\n" % (
+            blob += "<highlight>%s<end> (%s/<green>%s<end>) %s %s%s\n" % (
                 alt['char'][0]['name'], alt['char'][0]['level'], alt['char'][0]['ai_level'], alt['char'][0]['faction'],
-                alt['char'][0]['profession'])
+                alt['char'][0]['profession'], self.get_alt_status(alt["status"]))
 
         reply(ChatBlob("Alts for %s (%d)" % (sender.name, count), blob))
+
+    def get_alt_status(self, status):
+        if status == AltsManager.MAIN:
+            return " - [main]"
+        elif status == AltsManager.VALIDATED:
+            return ""
+        else:
+            return " - [unvalidated]"
 
     @command(command="alts", params=[Const("add"), Any("character")], access_level="all",
              description="Add an alt")

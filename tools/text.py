@@ -29,7 +29,7 @@ class Text:
         separators = ["<pagebreak>", "\n", " "]
 
         label = label.replace('"', "&quot;")
-        msg = "<header>" + label + "<end>\n\n" + msg.strip().replace('"', "&quot;")
+        msg = "<center><header>" + label + "<end></center>\n\n" + msg.strip().replace('"', "&quot;")
         msg = self.format_message(msg)
 
         if footer:

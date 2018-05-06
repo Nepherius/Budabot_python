@@ -113,7 +113,9 @@ class NumberSettingType(SettingType):
 
     def get_display(self):
         text = Registry.get_instance("text")
-        options_str = "\n".join(map(lambda opt: text.make_chatcmd(str(opt), "/tell <myname> config setting %s %s" % (self.name, opt)), self.options))
+        options_str = "\n".join(
+            map(lambda opt: text.make_chatcmd(str(opt), "/tell <myname> config setting %s %s" % (self.name, opt)),
+                self.options))
 
         return """For this setting you can set any positive integer.
 To change this setting:
@@ -145,7 +147,9 @@ class TimeSettingType(SettingType):
 
     def get_display(self):
         text = Registry.get_instance("text")
-        options_str = "\n".join(map(lambda opt: text.make_chatcmd(str(opt), "/tell <myname> config setting %s %s" % (self.name, opt)), self.options))
+        options_str = "\n".join(
+            map(lambda opt: text.make_chatcmd(str(opt), "/tell <myname> config setting %s %s" % (self.name, opt)),
+                self.options))
 
         return """For this setting you must enter a time value. See <a href='chatcmd:///tell <myname> help budatime'>budatime</a> for info on the format of the 'time' parameter.
 
@@ -154,3 +158,27 @@ To change this setting:
 <highlight>/tell <myname> config setting """ + self.name + """ <i>time</i><end>
 
 Or choose an option below:\n\n""" + options_str
+
+
+class BooleanSettingType(SettingType):
+    def __init__(self):
+        super().__init__()
+
+    def get_value(self):
+        return int(self._get_raw_value()) == 1
+
+    def get_display_value(self):
+        return "True" if self.get_value() else "False"
+
+    def set_value(self, value):
+        if value.lower() == "true":
+            self._set_raw_value(1)
+        elif value.lower() == "false":
+            self._set_raw_value(0)
+        else:
+            raise Exception("You must enter either 'true' or 'false'")
+
+    def get_display(self):
+        return """For this setting you can enter either true or false.
+<a href='chatcmd:///tell <myname> config setting """ + self.name + """ true'>True</a>
+<a href='chatcmd:///tell <myname> config setting """ + self.name + """ false'>False</a>"""

@@ -72,13 +72,6 @@ class EventManager:
                 'next_run': int(time.time())
             })
 
-            # if event_base_type == "timer":
-            #     self.db.insert('timer_event', {
-            #         'event_type': event_base_type,
-            #         'event_sub_type': event_sub_type,
-            #         'handler': handler_name,
-            #         'next_run': int(time.time())
-            #     })
         else:
             # mark command as verified
             self.db.update('event_config', {
