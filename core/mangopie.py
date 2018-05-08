@@ -108,6 +108,7 @@ class Mangopie(Bot):
 
         self.event_manager.fire_event("connect", None)
         self.post_start()
+
         while self.status == BotStatus.RUN:
             timestamp = int(time.time())
 

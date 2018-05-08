@@ -80,7 +80,7 @@ class AdminController:
 
         if self.admin_manager.add(char_id, AdminManager.MODERATOR):
             reply("Character <highlight>%s<end> added as <highlight>%s<end> successfully." % (
-            name, AdminManager.MODERATOR))
+                name, AdminManager.MODERATOR))
         else:
             reply("Could not add character <highlight>%s<end> as <highlight>%s<end>." % (name, AdminManager.MODERATOR))
 
@@ -96,7 +96,7 @@ class AdminController:
 
         if self.admin_manager.remove(char_id):
             reply("Character <highlight>%s<end> removed as <highlight>%s<end> successfully." % (
-            name, AdminManager.MODERATOR))
+                name, AdminManager.MODERATOR))
         else:
             reply(
                 "Could not remove character <highlight>%s<end> as <highlight>%s<end>." % (name, AdminManager.MODERATOR))

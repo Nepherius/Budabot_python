@@ -31,7 +31,8 @@ class PrivateChannelController:
         if sender.char_id == char_id:
             self.private_channel_manager.invite(sender.char_id)
         elif char_id:
-            self.bot.send_private_message(char_id, "You have been invited to the private channel by <highlight>%s<end>." % sender.name)
+            self.bot.send_private_message(char_id,
+                                          "You have been invited to the private channel by <highlight>%s<end>." % sender.name)
             self.private_channel_manager.invite(char_id)
             reply("You have invited <highlight>%s<end> to the private channel." % char)
         else:

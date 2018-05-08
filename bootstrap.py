@@ -5,8 +5,15 @@ from pymongo.errors import ConnectionFailure
 from core.registry import Registry
 from tools.config_creator import create_new_cfg
 from tools.logger import Logger
+import logging
+import sys
 
 try:
+
+    Logger.add_logger(
+        logging.handlers.RotatingFileHandler("./logs/bot.log", maxBytes=5 * 1024 * 1024 * 1024, backupCount=1000))
+    Logger.add_logger(logging.StreamHandler(sys.stdout))
+    Registry.logger = Logger("registry")
 
     logger = Logger("bootstrap")
     config_file = "./conf/config.json"

@@ -1,9 +1,7 @@
 from core.decorators import instance
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
-from pymongo import monitoring
 from tools.logger import Logger
-import json
 
 
 @instance()
@@ -43,6 +41,3 @@ class DB:
 
     def delete_all(self, table, query):
         return self.client[table].delete_many(query)
-
-
-

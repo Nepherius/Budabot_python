@@ -1,6 +1,4 @@
 from core.decorators import instance
-from bson.dbref import DBRef
-import os
 
 
 @instance()

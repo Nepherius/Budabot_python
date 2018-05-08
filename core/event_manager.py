@@ -3,7 +3,6 @@ from core.registry import Registry
 from tools.logger import Logger
 from __init__ import get_attrs
 import time
-import os
 
 
 @instance()
@@ -78,11 +77,11 @@ class EventManager:
                 'event_type': event_base_type,
                 'handler': handler_name
             }, {
-                'verified': 1,
-                'module': module,
-                'description': description,
-                'event_sub_type': event_sub_type,
-            })
+                               'verified': 1,
+                               'module': module,
+                               'description': description,
+                               'event_sub_type': event_sub_type,
+                           })
 
         # load command handler
         self.handlers[handler_name] = handler
