@@ -4,6 +4,8 @@ from core.setting_manager import SettingManager
 
 @instance()
 class Text:
+    separators = [{"symbol": "<pagebreak>", "include": False}, {"symbol": "\n", "include": True}, {"symbol": " ", "include": True}]
+
     def __init__(self):
         pass
 
@@ -23,13 +25,13 @@ class Text:
         return "<a href='itemref://%d/%d/%d'>%s</a>" % (low_id, high_id, ql, name)
 
     def make_image(self, image_id, image_db="rdb"):
-        return "<img src='%s://id:%s'>" % (image_db, image_id)
+        return ("<img src='%s://id:%s'>" if image_db == 'tdb' else "<img src='%s://%s'>") % (image_db, image_id)
 
     def paginate(self, label, msg, max_page_length, max_num_pages=None, footer=None):
-        separators = ["<pagebreak>", "\n", " "]
+        separators = iter(self.separators)
 
         label = label.replace('"', "&quot;")
-        msg = "<center><header>" + label + "<end></center>\n\n" + msg.strip().replace('"', "&quot;")
+        msg = "<header>" + label + "<end>\n\n" + msg.strip().replace('"', "&quot;")
         msg = self.format_message(msg)
 
         if footer:
@@ -37,17 +39,31 @@ class Text:
         else:
             footer = ""
 
+        separator = next(separators)
+
         rest = msg
         current_page = ""
         pages = []
 
         while len(rest) > 0:
-            line, rest = self.get_next_line(rest, max_page_length, separators)
+            line, rest = self.get_next_line(rest, separator)
+            line_length = len(line)
+
+            # if separator is not sufficient, try the next one
+            if line_length > max_page_length:
+                try:
+                    separator = next(separators)
+                    rest = line + rest
+                    continue
+                except StopIteration:
+                    # this is thrown when there are no more separators in the iterator
+                    raise Exception("Could not paginate: page is too large")
+
             if max_num_pages == len(pages) + 1:
-                if len(current_page) + len(line) + len(footer) > max_page_length:
+                if len(current_page) + line_length + len(footer) > max_page_length:
                     break
             else:
-                if len(current_page) + len(line) > max_page_length:
+                if len(current_page) + line_length > max_page_length:
                     pages.append(current_page.strip())
                     current_page = ""
 
@@ -75,25 +91,18 @@ class Text:
     def format_page(self, label, msg):
         return "<a href=\"text://" + msg + "\">" + label + "</a>"
 
-    def get_next_line(self, msg, max_page_length, separators):
-        if len(separators) == 0:
-            raise Exception("Could not paginate")
-
-        separator = separators[0]
-        result = msg.split(separator, 1)
+    def get_next_line(self, msg, separator):
+        result = msg.split(separator["symbol"], 1)
         line = result[0]
         if len(result) == 1:
             rest = ""
         else:
             rest = result[1:][0]
 
-        if separator == " " or separator == "\n":
-            line += separator
+        if separator["include"]:
+            line += separator["symbol"]
 
-        if len(line) > max_page_length:
-            return self.get_next_line(msg, max_page_length, separators[1:])
-        else:
-            return line, rest
+        return line, rest
 
     def format_message(self, msg):
         return msg\
