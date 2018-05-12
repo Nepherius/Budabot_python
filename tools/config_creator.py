@@ -8,7 +8,7 @@ def create_new_cfg():
         config['password'] = validate_input('Account password: ', 3)
         config['character'] = validate_input('Enter the character name the bot will run on: ', 3)
         config['superadmin'] = validate_input('Enter the name of the character you wish to be super-admin: ', 3)
-        config['dimension'] = validate_input('Choose dimension (1 - Rubi-Ka(Live), 2 - Test)[1]: ', 1, 1, ['1', '2'])
+        config['dimension'] = validate_input('Choose dimension (1 - Rubi-Ka(Live), 2 - Test ,3 - Proxy)[1]: ', 1, 1, ['1', '2', 3])
         print('Database info, press enter to use default values.')
         config['db_name'] = validate_input('Database name?[mangopie]', 0, 'mangopie')
         config['db_host'] = validate_input('Database host?[localhost:27017/]', 0, 'localhost:27017/')

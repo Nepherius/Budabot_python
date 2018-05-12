@@ -47,6 +47,8 @@ try:
         bot.connect("chat.d1.funcom.com", 7105)
     elif int(config["dimension"]) == 2:
         bot.connect("chat.dt.funcom.com", 7109)
+    elif int(config["dimension"]) == 3:
+        bot.connect("localhost", 9993)
     else:
         print('Invalid server!')
         bot.disconnect()
