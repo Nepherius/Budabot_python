@@ -1,6 +1,7 @@
 import json
 import time
 import os
+from core.aochat.mmdb_parser import MMDBParser
 from pymongo.errors import ConnectionFailure
 from core.registry import Registry
 from tools.config_creator import create_new_cfg
@@ -9,7 +10,7 @@ import logging
 import sys
 
 try:
-
+    mmdb = MMDBParser("text.mdb")
     Logger.add_logger(
         logging.handlers.RotatingFileHandler("./logs/bot.log", maxBytes=5 * 1024 * 1024 * 1024, backupCount=1000))
     Logger.add_logger(logging.StreamHandler(sys.stdout))
@@ -58,7 +59,7 @@ try:
     if not bot.login(config["username"], config["password"], config["character"]):
         bot.disconnect()
         time.sleep(5)
-        exit(1)
+        exit(3)
     else:
         status = bot.run()
         bot.disconnect()
@@ -70,3 +71,8 @@ except ConnectionFailure:
 
 except KeyboardInterrupt:
     exit(0)
+
+except Exception as e:
+    logger = Logger("bootstrap")
+    logger.error("", e)
+    exit(4)

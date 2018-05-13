@@ -48,6 +48,7 @@ class Mangopie(Bot):
         # prepare indexes, commands, events, and settings
         self.db.client['admin'].create_index("char_id", unique=True)
         self.db.client['player'].create_index("char_id", unique=True)
+        self.db.client['online'].create_index("char_id", unique=True)
         self.db.client['command_config'].update_many({}, {'$set': {'verified': 0}})
         self.db.client['event_config'].update_many({}, {'$set': {'verified': 0}})
         self.db.client['settings'].update_many({}, {'$set': {'verified': 0}})
@@ -129,7 +130,7 @@ class Mangopie(Bot):
 
     def iterate(self):
         packet = self.read_packet()
-        if packet is not None:
+        if packet:
             if isinstance(packet, server_packets.PrivateMessage):
                 self.handle_private_message(packet)
             elif isinstance(packet, server_packets.PublicChannelJoined):
@@ -199,7 +200,7 @@ class Mangopie(Bot):
 
     def get_text_pages(self, msg, max_page_length):
         if isinstance(msg, ChatBlob):
-            return self.text.paginate(msg.title, msg.msg, max_page_length, None, msg.footer)
+            return self.text.paginate(msg.title, msg.msg, max_page_length, msg.max_num_pages, msg.footer)
         else:
             return [self.text.format_message(msg)]
 

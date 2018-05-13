@@ -16,6 +16,10 @@ import re
 
 @instance()
 class CommandManager:
+    PRIVATE_CHANNEL = "priv"
+    ORG_CHANNEL = "org"
+    PRIVATE_MESSAGE = "msg"
+
     def __init__(self):
         self.handlers = collections.defaultdict(list)
         self.logger = Logger("command_manager")
@@ -43,9 +47,9 @@ class CommandManager:
     def pre_start(self):
         self.bot.add_packet_handler(server_packets.PrivateMessage.id, self.handle_private_message)
         self.bot.add_packet_handler(server_packets.PrivateChannelMessage.id, self.handle_private_channel_message)
-        self.register_command_channel("Private Message", "msg")
-        self.register_command_channel("Org Channel", "org")
-        self.register_command_channel("Private Channel", "priv")
+        self.register_command_channel("Private Message", self.PRIVATE_MESSAGE)
+        self.register_command_channel("Org Channel", self.ORG_CHANNEL)
+        self.register_command_channel("Private Channel", self.PRIVATE_CHANNEL)
 
     def start(self):
         # process decorators
@@ -98,7 +102,7 @@ class CommandManager:
         # save reference to command handler
         r = re.compile(self.get_regex_from_params(params), re.IGNORECASE)
         self.handlers[command_key].append(
-            {"regex": r, "callback": handler, "help": help_text, "description": description})
+            {"regex": r, "callback": handler, "help": help_text, "description": description, "params": params})
 
     def handle_private_message(self, packet: server_packets.PrivateMessage):
         # since the command symbol is not required for private messages,
@@ -147,7 +151,8 @@ class CommandManager:
             command_alias = self.command_alias_manager.check_for_alias(command_str)
 
             if command_alias:
-                command_str, command_args = self.get_command_parts(command_alias + " " + command_args if command_args else command_alias)
+                command_str, command_args = self.get_command_parts(
+                    command_alias + " " + command_args if command_args else command_alias)
 
             cmd_configs = self.get_command_configs(command_str, channel, 1)
             cmd_configs = list(cmd_configs)
@@ -158,7 +163,7 @@ class CommandManager:
                     if self.access_manager.check_access(char_id, cmd_config['access_level']):
                         sender = MapObject(
                             {"name": self.character_manager.resolve_char_to_name(char_id), "char_id": char_id})
-                        handler["callback"](channel, sender, reply, matches)
+                        handler["callback"](channel, sender, reply, self.process_matches(matches, handler["params"]))
                     else:
                         self.access_denied_response(char_id, cmd_config, reply)
                 else:
@@ -222,7 +227,6 @@ class CommandManager:
         if command_args:
             command_args = " " + command_args
 
-
         for row in cmd_configs:
             command_key = self.get_command_key(row['command'], row['sub_command'])
             handlers = self.handlers[command_key]
@@ -232,6 +236,11 @@ class CommandManager:
                     return row, self.format_matches(command_args, matches), handler
         return None, None, None
 
+    def process_matches(self, matches, params):
+        processed = [matches.pop(0)]
+        for param in params:
+            processed.append(param.process_matches(matches))
+        return processed
 
     def format_matches(self, command_args, matches):
         # convert matches to list

@@ -22,7 +22,7 @@ class CharacterInfoController:
         char_name = args[1].capitalize()
         char_info = self.pork_manager.get_character_info(char_name)
         char_id = self.character_manager.resolve_char_to_id(char_name)
-        if char_info and char_info['source'] != 'chat_server':
+        if char_info:
             blob = "Name: %s\n" % self.get_full_name(char_info)
             blob += "Profession: %s\n" % char_info['profession']
             blob += "Faction: %s\n" % char_info['faction']
@@ -43,7 +43,7 @@ class CharacterInfoController:
             blob += "Source: %s\n" % char_info['source']
             more_info = self.text.paginate("More Info", blob, 5000, 1)[0]
 
-            msg = "<highlight>%s<end> (%d/<green>%d<end>) %s %s %s" % (char_info['name'], char_info['level'], char_info['ai_level'], char_info['faction'], char_info['profession'], more_info)
+            msg = self.format_char_info(char_info) + " " + more_info
             reply(msg)
         elif char_id:
             blob = "<notice>Note: Could not retrieve detailed info for character.<end>\n\n"
@@ -64,3 +64,10 @@ class CharacterInfoController:
             name += " " + char_info['last_name']
 
         return name
+
+    def format_char_info(self, char_info):
+        if char_info['org_name'] and char_info['org_rank_name']:
+            return "<highlight>%s<end> (%d/<green>%d<end>) %s %s, %s of %s" % \
+                   (char_info['name'], char_info['level'], char_info['ai_level'], char_info['faction'], char_info['profession'], char_info['org_rank_name'], char_info['org_name'])
+        else:
+            return "<highlight>%s<end> (%d/<green>%d<end>) %s %s" % (char_info['name'], char_info['level'], char_info['ai_level'], char_info['faction'], char_info['profession'])
