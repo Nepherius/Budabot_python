@@ -13,7 +13,7 @@ class PrivateChannelController:
         self.private_channel_manager = registry.get_instance("private_channel_manager")
         self.character_manager = registry.get_instance("character_manager")
 
-    @command(command="join", params=[], access_level="all",
+    @command(command="join", params=[], access_level="member",
              description="Join the private channel")
     def join_cmd(self, channel, sender, reply, args):
         self.private_channel_manager.invite(sender.char_id)
@@ -23,10 +23,10 @@ class PrivateChannelController:
     def leave_cmd(self, channel, sender, reply, args):
         self.private_channel_manager.kick(sender.char_id)
 
-    @command(command="invite", params=[Any("character")], access_level="all",
+    @command(command="invite", params=[Any("character")], access_level="member",
              description="Invite a character to the private channel")
     def invite_cmd(self, channel, sender, reply, args):
-        char = args[1].capitalize()
+        char = args[0].capitalize()
         char_id = self.character_manager.resolve_char_to_id(char)
         if sender.char_id == char_id:
             self.private_channel_manager.invite(sender.char_id)

@@ -1,5 +1,6 @@
 import re
 from core.registry import Registry
+from tools.map_object import MapObject
 
 
 class CommandParam:
@@ -20,7 +21,7 @@ class Const(CommandParam):
         self.is_optional = is_optional
 
     def get_regex(self):
-        regex = "( " + self.name + ")"
+        regex = "(\s+" + self.name + ")"
         return regex + ("?" if self.is_optional else "")
 
     def get_name(self):
@@ -30,7 +31,11 @@ class Const(CommandParam):
             return self.name
 
     def process_matches(self, params):
-        return params.pop(0)
+        val = params.pop(0)
+        if val is None:
+            return None
+        else:
+            return val[1:]
 
 
 class Int(CommandParam):
@@ -40,7 +45,7 @@ class Int(CommandParam):
         self.is_optional = is_optional
 
     def get_regex(self):
-        regex = "( [0-9]+)"
+        regex = "(\s+[0-9]+)"
         return regex + ("?" if self.is_optional else "")
 
     def get_name(self):
@@ -54,7 +59,7 @@ class Int(CommandParam):
         if val is None:
             return None
         else:
-            return int(val)
+            return int(val[1:])
 
 
 class Any(CommandParam):
@@ -64,10 +69,8 @@ class Any(CommandParam):
         self.is_optional = is_optional
 
     def get_regex(self):
-        if self.is_optional:
-            return "( .+?)?"
-        else:
-            return "( .+?)"
+        regex = "(\s+.+?)"
+        return regex + ("?" if self.is_optional else "")
 
     def get_name(self):
         if self.is_optional:
@@ -76,7 +79,11 @@ class Any(CommandParam):
             return "<highlight>%s<end>" % self.name
 
     def process_matches(self, params):
-        return params.pop(0)
+        val = params.pop(0)
+        if val is None:
+            return None
+        else:
+            return val[1:]
 
 
 class Regex(CommandParam):
@@ -110,7 +117,7 @@ class Options(CommandParam):
         self.is_optional = is_optional
 
     def get_regex(self):
-        regex = "(" + "|".join(map(lambda x: " " + re.escape(x), self.options)) + ")"
+        regex = "(" + "|".join(map(lambda x: "\s+" + re.escape(x), self.options)) + ")"
         return regex + ("?" if self.is_optional else "")
 
     def get_name(self):
@@ -120,7 +127,11 @@ class Options(CommandParam):
             return "|".join(self.options)
 
     def process_matches(self, params):
-        return params.pop(0)
+        val = params.pop(0)
+        if val is None:
+            return None
+        else:
+            return val[1:]
 
 
 class Time(CommandParam):
@@ -130,7 +141,7 @@ class Time(CommandParam):
         self.is_optional = is_optional
 
     def get_regex(self):
-        regex = "( (([0-9]+)([a-z]+))+)"
+        regex = "(\s+(([0-9]+)([a-z]+))+)"
         return regex + ("?" if self.is_optional else "")
 
     def get_name(self):
@@ -149,22 +160,36 @@ class Time(CommandParam):
             return None
         else:
             util = Registry.get_instance("util")
-            return util.parse_time(budatime_str)
+            return util.parse_time(budatime_str[1:])
 
-class Item:
+
+class Item(CommandParam):
     def __init__(self, name, is_optional=False):
         super().__init__()
         self.name = name
         self.is_optional = is_optional
 
     def get_regex(self):
-        if self.is_optional:
-            return " <a href=\"itemref:\/\/(\d+)\/(\d+)\/(\d+)\">(.+)<\/a>?"
-        else:
-            return " <a href=\"itemref:\/\/(\d+)\/(\d+)\/(\d+)\">(.+)<\/a>"
+        regex = """(\s+<a href="itemref:\/\/(\d+)\/(\d+)\/(\d+)">(.+)<\/a>)"""
+        return regex + ("?" if self.is_optional else "")
 
     def get_name(self):
         if self.is_optional:
             return "<highlight>[%s]<end>" % self.name
         else:
             return "<highlight>%s<end>" % self.name
+
+    def process_matches(self, params):
+        if params.pop(0):
+            return MapObject({
+                "low_id": int(params.pop(0)),
+                "high_id": int(params.pop(0)),
+                "ql": int(params.pop(0)),
+                "name": params.pop(0)
+            })
+        else:
+            params.pop(0)
+            params.pop(0)
+            params.pop(0)
+            params.pop(0)
+            return None

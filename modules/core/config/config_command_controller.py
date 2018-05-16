@@ -23,9 +23,9 @@ class ConfigCommandController:
              access_level="superadmin",
              description="Enable or disable a command")
     def config_cmd_status_cmd(self, channel, sender, reply, args):
-        cmd_name = args[2].lower()
-        action = args[3].lower()
-        cmd_channel = args[4].lower()
+        cmd_name = args[1].lower()
+        action = args[2].lower()
+        cmd_channel = args[3].lower()
         command_str, sub_command_str = self.command_manager.get_command_key_parts(cmd_name)
         enabled = 1 if action == "enable" else 0
 
@@ -53,7 +53,7 @@ class ConfigCommandController:
              access_level="superadmin",
              description="Change access_level for a command")
     def config_cmd_access_level_cmd(self, channel, sender, reply, args):
-        cmd_name = args[2].lower()
+        cmd_name = args[1].lower()
         cmd_channel = args[3].lower()
         access_level = args[4].lower()
         command_str, sub_command_str = self.command_manager.get_command_key_parts(cmd_name)
@@ -84,7 +84,7 @@ class ConfigCommandController:
     @command(command="config", params=[Const("cmd"), Any("cmd_name")], access_level="superadmin",
              description="Show command configuration")
     def config_cmd_show_cmd(self, channel, sender, reply, args):
-        cmd_name = args[2].lower()
+        cmd_name = args[1].lower()
         command_str, sub_command_str = self.command_manager.get_command_key_parts(cmd_name)
 
         blob = ""

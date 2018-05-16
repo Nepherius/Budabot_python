@@ -25,7 +25,7 @@ class Text:
         return "<a href='itemref://%d/%d/%d'>%s</a>" % (low_id, high_id, ql, name)
 
     def make_image(self, image_id, image_db="rdb"):
-        return "<img src='%s://%s'>" % (image_db, image_id)
+        return ("<img src='%s://id:%s'>" if image_db == 'tdb' else "<img src='%s://%s'>") % (image_db, image_id)
 
     def paginate(self, label, msg, max_page_length, max_num_pages=None, footer=None):
         separators = iter(self.separators)

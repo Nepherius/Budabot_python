@@ -233,13 +233,15 @@ class CommandManager:
             for handler in handlers:
                 matches = handler["regex"].match(command_args)
                 if matches:
-                    return row, self.format_matches(command_args, matches), handler
+                    return row, matches, handler
         return None, None, None
 
     def process_matches(self, matches, params):
-        processed = [matches.pop(0)]
+        groups = list(matches.groups())
+
+        processed = []
         for param in params:
-            processed.append(param.process_matches(matches))
+            processed.append(param.process_matches(groups))
         return processed
 
     def format_matches(self, command_args, matches):
