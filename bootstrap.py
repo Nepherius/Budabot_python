@@ -1,7 +1,7 @@
 import json
 import time
 import os
-from core.aochat.mmdb_parser import MMDBParser
+
 from pymongo.errors import ConnectionFailure
 from core.registry import Registry
 from tools.config_creator import create_new_cfg
@@ -10,9 +10,10 @@ import logging
 import sys
 
 try:
-    mmdb = MMDBParser("text.mdb")
+
     Logger.add_logger(
-        logging.handlers.RotatingFileHandler("./logs/bot.log", maxBytes=5 * 1024 * 1024 * 1024, backupCount=1000))
+        logging.handlers.RotatingFileHandler("./logs/bot.log", maxBytes=5 * 1024 * 1024 * 1024, backupCount=1000,
+                                             encoding="utf-8"))
     Logger.add_logger(logging.StreamHandler(sys.stdout))
     Registry.logger = Logger("registry")
 

@@ -7,6 +7,7 @@ from core.aochat import server_packets, client_packets
 class PrivateChannelManager:
     JOINED_PRIVATE_CHANNEL_EVENT = "private_channel_joined"
     LEFT_PRIVATE_CHANNEL_EVENT = "private_channel_left"
+    PRIVATE_CHANNEL_MESSAGE_EVENT = 'private_channel_message'
 
     def __init__(self):
         self.logger = Logger("Mangopie")
@@ -20,12 +21,14 @@ class PrivateChannelManager:
     def pre_start(self):
         self.event_manager.register_event_type(self.JOINED_PRIVATE_CHANNEL_EVENT)
         self.event_manager.register_event_type(self.LEFT_PRIVATE_CHANNEL_EVENT)
+        self.event_manager.register_event_type(self.PRIVATE_CHANNEL_MESSAGE_EVENT)
         self.bot.add_packet_handler(server_packets.PrivateChannelClientJoined.id, self.handle_private_channel_client_joined)
         self.bot.add_packet_handler(server_packets.PrivateChannelClientLeft.id, self.handle_private_channel_client_left)
         self.bot.add_packet_handler(server_packets.PrivateChannelMessage.id, self.handle_private_channel_message)
 
     def handle_private_channel_message(self, packet: server_packets.PrivateChannelMessage):
         char_name = self.character_manager.get_char_name(packet.char_id)
+        self.event_manager.fire_event(self.PRIVATE_CHANNEL_MESSAGE_EVENT, packet)
         self.logger.log_chat("Private Channel", char_name, packet.message)
 
     def handle_private_channel_client_joined(self, packet: server_packets.PrivateChannelClientJoined):

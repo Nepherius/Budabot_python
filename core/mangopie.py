@@ -212,5 +212,3 @@ class Mangopie(Bot):
 
     def restart(self):
         self.status = BotStatus.RESTART
-
-
