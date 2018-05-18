@@ -13,7 +13,7 @@ try:
 
     Logger.add_logger(
         logging.handlers.RotatingFileHandler("./logs/bot.log", maxBytes=5 * 1024 * 1024 * 1024, backupCount=1000,
-                                             encoding="utf-8"))
+                                             encoding="iso-8859-1"))
     Logger.add_logger(logging.StreamHandler(sys.stdout))
     Registry.logger = Logger("registry")
 
