@@ -1,7 +1,7 @@
 import json
 import time
 import os
-
+from core.aochat.mmdb_parser import MMDBParser
 from pymongo.errors import ConnectionFailure
 from core.registry import Registry
 from tools.config_creator import create_new_cfg
@@ -38,6 +38,7 @@ try:
 
     logger.debug("Loading instances")
     Registry.load_instances(["core", os.path.join("modules", "core"), os.path.join("modules", "addons")])
+    Registry.add_instance("mmdb_parser", MMDBParser("text.mdb"))
     Registry.inject_all()
 
     bot = Registry.get_instance("mangopie")
