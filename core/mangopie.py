@@ -46,9 +46,10 @@ class Mangopie(Bot):
         self.dimension = 5
 
         # prepare indexes, commands, events, and settings
-        self.db.client['admin'].create_index("char_id", unique=True)
-        self.db.client['player'].create_index("char_id", unique=True)
-        self.db.client['online'].create_index("char_id", unique=True)
+        self.db.client['admin'].create_index("char_id", unique=True,background=True)
+        self.db.client['player'].create_index("char_id", unique=True,background=True)
+        self.db.client['online'].create_index("char_id", unique=True,background=True)
+        self.db.client['event_config'].create_index("event_type", background=True)
         self.db.client['command_config'].update_many({}, {'$set': {'verified': 0}})
         self.db.client['event_config'].update_many({}, {'$set': {'verified': 0}})
         self.db.client['settings'].update_many({}, {'$set': {'verified': 0}})

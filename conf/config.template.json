@@ -5,5 +5,5 @@
     "superadmin": "",
     "dimension": "1",
     "db_name": "mangopie",
-    "db_host": "localhost:27017/"
+    "db_host": "mongodb://localhost:27017/"
 }

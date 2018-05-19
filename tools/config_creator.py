@@ -11,7 +11,7 @@ def create_new_cfg():
         config['dimension'] = validate_input('Choose dimension (1 - Rubi-Ka(Live), 2 - Test ,3 - Proxy)[1]: ', 1, 1, ['1', '2', 3])
         print('Database info, press enter to use default values.')
         config['db_name'] = validate_input('Database name?[mangopie]', 0, 'mangopie')
-        config['db_host'] = validate_input('Database host?[localhost:27017/]', 0, 'localhost:27017/')
+        config['db_host'] = validate_input('Database host?[mongodb://localhost:27017/]', 0, 'mongodb://localhost:27017/')
 
         with open('./conf/config.json', 'wb') as f:
             json.dump(config, codecs.getwriter('utf-8')(f), ensure_ascii=False, indent=4, sort_keys=False)

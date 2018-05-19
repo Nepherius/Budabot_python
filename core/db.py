@@ -12,7 +12,7 @@ class DB:
         self.logger = Logger("MongoDB")
 
     def connect(self, host, name):
-        self.connection = MongoClient('mongodb://%s' % host)
+        self.connection = MongoClient(host)
         self.client = self.connection[name]
         # Test db connection on start up, do not remove
         self.connection.admin.command('ismaster')
