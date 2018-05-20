@@ -53,7 +53,7 @@ class MMDBParser:
     def find_entry(self, file, entry_id, min_offset, max_offset):
         file.seek(min_offset)
         entry = self.read_entry(file)
-        while file.tell() < max_offset:
+        while file.tell() <= max_offset:
             if entry["id"] == entry_id:
                 return entry
             entry = self.read_entry(file)
@@ -103,7 +103,7 @@ class MMDBParser:
                 args.append(param_str[1:1 + size])
                 param_str = param_str[1 + size:]
             elif data_type == "I":
-                args.append(struct.unpack(">I", param_str[:4])[0])
+                args.append(struct.unpack(">I", param_str[:4].encode("latin-1"))[0])
                 param_str = param_str[4:]
             elif data_type == "i" or data_type == "u":
                 args.append(self.read_base_85(param_str[:5]))
@@ -118,7 +118,7 @@ class MMDBParser:
                 param_str = param_str[10:]
             elif data_type == "l":
                 category_id = 20000
-                instance_id = struct.unpack(">I", param_str[:4])[0]
+                instance_id = struct.unpack(">I", param_str[:4].encode("latin-1"))[0]
                 message = self.get_message_string(category_id, instance_id)
                 if not message:
                     raise Exception("Could not find message string for category '%s' and instance '%s'" % (category_id, instance_id))

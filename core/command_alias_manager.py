@@ -14,8 +14,8 @@ class CommandAliasManager:
 
     def check_for_alias(self, command_str):
         row = self.get_alias(command_str)
-        if row and row.enabled:
-            return row.command
+        if row and row['enabled']:
+            return row['command']
         else:
             return None
 
