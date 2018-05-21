@@ -33,6 +33,8 @@ class DB:
     def find(self, table, query):
         return self.client[table].find_one(query)
 
+    def find_and_update(self, table, target, update):
+        return self.client[table].find_one_and_update(target, {"$set": update})
     def find_all(self, table, query):
         return self.client[table].find(query)
 
